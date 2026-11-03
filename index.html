@@ -7,7 +7,7 @@
 <meta name="description" content="OBDTech — أجهزة فحص وتشخيص السيارات في العراق. توصيل لجميع المحافظات بـ 5,000 دينار.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Layout idea: a workshop instrument panel. Cool steel surfaces, OBDTech brand red from the logo,
    model codes set like stamped part numbers. Catalogue first, ordering one tap away. */
@@ -23,8 +23,8 @@
   --amber-soft:#FBE8E6;
   --ok:#1E8A4C;
   --bad:#C0392B;
-  --display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
-  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --display:"Reem Kufi","IBM Plex Sans Arabic","Noto Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic","Noto Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   --r:14px;
   color-scheme:light;
@@ -289,6 +289,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber)}
 .tile:hover .arr{transform:translateX(-4px);color:var(--amber)}
 @media (max-width:420px){.tile{padding:14px}.tile b{font-size:15px}}
 .faq-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px;font-weight:600}
+
+.langs{display:flex;gap:2px;margin-inline-start:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px}
+.top nav+.langs{margin-inline-start:0}
+.langs button{border:0;background:transparent;color:#fff;font:600 13px var(--body);padding:6px 10px;border-radius:999px;cursor:pointer;line-height:1}
+.langs button[aria-pressed="true"]{background:#fff;color:var(--brand)}
+.top nav{margin-inline-end:4px}
+[dir="ltr"] .tile:hover .arr{transform:translateX(4px)}
+[dir="rtl"] .card .mdl,[dir="rtl"] .item .pp{text-align:right}
+[dir="ltr"] .card .mdl,[dir="ltr"] .item .pp{text-align:left}
+:root[lang="ckb"]{--display:"Noto Sans Arabic",system-ui,sans-serif;--body:"Noto Sans Arabic",system-ui,sans-serif}
+:root[lang="en"] .hero h1{letter-spacing:-.01em}
+#faqList{display:block}
+@media (max-width:520px){.wa-txt{display:none}#waTop{padding:10px 12px}.langs button{padding:6px 8px;font-size:12px}}
+.tile small{font:600 12.5px var(--body);font-variant-numeric:tabular-nums}
+.totals span:last-child{font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:600}
 </style>
 <!-- Meta Pixel (dataset 816372657655264). Loads only on your own domain; blocked inside the Claude preview. -->
 <script>
@@ -305,13 +320,13 @@ fbq('init','816372657655264');fbq('track','PageView');
   <div class="wrap">
     <a class="logo" href="#top"><img src="data:image/png;base64,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" alt="OBDTech" width="116" height="34"></a>
     <nav aria-label="أقسام الصفحة">
-      <a href="#catalog">المنتجات</a>
-      <a href="#how">طريقة الطلب</a>
-      <a href="#faq">الأسئلة</a>
+      <a href="#catalog" data-i="nav_products">المنتجات</a>
+      <a href="#how" data-i="nav_how">طريقة الطلب</a>
+      <a href="#faq" data-i="nav_faq">الأسئلة</a>
     </nav>
+    <div class="langs" role="group" aria-label="Language / اللغة / زمان"><button type="button" data-lang="ar" lang="ar">عربي</button><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="ckb" lang="ckb">کوردی</button></div>
     <a class="btn btn-white" id="waTop" href="#">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.4 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.4-.9-2.8-1.2-4.6-4.1-4.7-4.3-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.6 2.1 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
-      واتساب
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.4 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.4-.9-2.8-1.2-4.6-4.1-4.7-4.3-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.6 2.1 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg><span class="wa-txt" data-i="whatsapp">واتساب</span>
     </a>
   </div>
 </header>
@@ -322,22 +337,22 @@ fbq('init','816372657655264');fbq('track','PageView');
       <div>
         <span class="lamp">
           <svg viewBox="0 0 64 40" fill="currentColor" aria-hidden="true"><path d="M14 8h10V4h14v4h6l5 6h5v-4h6v20h-6v-4h-5l-6 8H20l-6-6H9v6H3V12h6v6h5V8Zm6 6v12l3 3h17l5-6v-9h-3l-4-5H20v5Z"/></svg>
-          أدوات فحص وتشخيص السيارات
+          <span data-i="lamp">أدوات فحص وتشخيص السيارات</span>
         </span>
-        <h1>اعرف عطل سيارتك قبل ما توصل <em>للفيتر</em></h1>
-        <p class="lead">أجهزة فحص OBD2، أدوات ورش، مبرمجات ECU وأجهزة قياس من أشهر الشركات. اختر جهازك واطلب مباشرة، والتوصيل لكل محافظات العراق.</p>
+        <h1 data-ih="h1">اعرف عطل سيارتك قبل ما توصل <em>للفيتر</em></h1>
+        <p class="lead" data-i="lead">أجهزة فحص OBD2، أدوات ورش، مبرمجات ECU وأجهزة قياس من أشهر الشركات. اختر جهازك واطلب مباشرة، والتوصيل لكل محافظات العراق.</p>
         <div class="cta">
-          <a class="btn btn-amber" href="#catalog">تصفح المنتجات</a>
-          <a class="btn btn-ghost" id="waHero" href="#">اسألنا عن سيارتك</a>
+          <a class="btn btn-amber" href="#catalog" data-i="cta_browse">تصفح المنتجات</a>
+          <a class="btn btn-ghost" id="waHero" href="#" data-i="cta_ask">اسألنا عن سيارتك</a>
         </div>
         <ul class="facts">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>التوصيل <b>5,000</b> د.ع لكل المحافظات</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>الدفع عند الاستلام</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>دعم فني بالعربي</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span data-ih="fact_delivery">التوصيل <b>5,000</b> د.ع لكل المحافظات</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span data-i="fact_cod">الدفع عند الاستلام</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span data-i="fact_support">دعم فني بالعربي</span></li>
         </ul>
       </div>
 
-      <nav class="tiles" id="tiles" aria-label="تسوق حسب القسم"></nav>
+      <nav class="tiles" id="tiles" data-ia="tiles_aria" aria-label="تسوق حسب القسم"></nav>
     </div>
   </section>
 
@@ -347,81 +362,72 @@ fbq('init','816372657655264');fbq('track','PageView');
     <div class="wrap">
       <div class="cat-head">
         <div>
-          <h2 id="catTitle">المنتجات</h2>
+          <h2 id="catTitle" data-i="cat_title">المنتجات</h2>
           <p id="count"></p>
         </div>
         <label class="search" for="q">
-          <span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">ابحث عن جهاز</span>
+          <span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" data-i="search_label">ابحث عن جهاز</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="q" type="search" placeholder="ابحث: XTOOL، ملتيميتر، TPMS…" autocomplete="off">
+          <input id="q" type="search" data-iph="search_ph" placeholder="ابحث: XTOOL، ملتيميتر، TPMS…" autocomplete="off">
         </label>
       </div>
-      <div class="chips" id="chips" role="toolbar" aria-label="التصنيفات"></div>
+      <div class="chips" id="chips" role="toolbar" data-ia="chips_aria" aria-label="التصنيفات"></div>
       <div class="grid" id="grid"></div>
     </div>
   </section>
 
   <section class="band" id="how" aria-labelledby="howTitle">
     <div class="wrap">
-      <h2 id="howTitle">طريقة الطلب</h2>
+      <h2 id="howTitle" data-i="how_title">طريقة الطلب</h2>
       <ol class="steps">
-        <li><b>اختر الأجهزة</b><p>اضغط «أضف للطلب» على أي جهاز. تقدر تجمع أكثر من جهاز بطلب واحد وتدفع توصيل مرة وحدة.</p></li>
-        <li><b>اكتب معلوماتك</b><p>الاسم، رقم الهاتف، المحافظة والعنوان.</p></li>
-        <li><b>أرسل عبر واتساب</b><p>يوصلنا الطلب جاهز، نأكد وياك ونرسل الجهاز. تدفع عند الاستلام.</p></li>
+        <li><b data-i="s1b">اختر الأجهزة</b><p data-i="s1p">اضغط «أضف للطلب» على أي جهاز. تقدر تجمع أكثر من جهاز بطلب واحد وتدفع توصيل مرة وحدة.</p></li>
+        <li><b data-i="s2b">اكتب معلوماتك</b><p data-i="s2p">الاسم، رقم الهاتف، المحافظة والعنوان.</p></li>
+        <li><b data-i="s3b">أرسل عبر واتساب</b><p data-i="s3p">يوصلنا الطلب جاهز، نأكد وياك ونرسل الجهاز. تدفع عند الاستلام.</p></li>
       </ol>
     </div>
   </section>
 
   <section class="faq" id="faq" aria-labelledby="faqTitle">
     <div class="wrap">
-      <h2 id="faqTitle">أسئلة شائعة</h2>
-      <details><summary>هل تبيعون بالجملة؟</summary><p>نعم، نوفر أسعار جملة للمحلات والورش. تواصل ويانا على واتساب بالكمية المطلوبة ونرسلك السعر.</p></details>
-      <details><summary>هل الجهاز يشتغل على سيارتي؟</summary><p>أغلب الأجهزة تشتغل على السيارات اللي بيها منفذ OBD2. دزلنا نوع السيارة والموديل والسنة ونگلك أي جهاز يناسبها.</p></details>
-      <details><summary>كم أجور التوصيل؟</summary><p>5,000 دينار لكل محافظات العراق، لكل طلب مهما كان عدد الأجهزة.</p></details>
-      <details><summary>كم يوم يوصل الطلب؟</summary><p>يعتمد على المحافظة. تواصل ويانا ونگلك موعد التوصيل لمنطقتك.</p></details>
-      <details><summary>شلون أدفع؟</summary><p>الدفع نقداً عند استلام الطلب.</p></details>
-      <details><summary>هل الأجهزة عليها ضمان؟</summary><p>نعم، تواصل ويانا ونوضح لك تفاصيل الضمان لكل جهاز.</p></details>
-      <details><summary>هل تقدمون دعم فني بعد الشراء؟</summary><p>نعم، راسلنا بأي وقت ونساعدك بتشغيل الجهاز واستخدامه.</p></details>
-      <details><summary>الجهاز اللي أريده مو موجود بالموقع؟</summary><p>تواصل ويانا واكتب اسم الجهاز، ونحاول نوفره إلك.</p></details>
-      <details><summary>هل توصلون خارج العراق؟</summary><p>حالياً التوصيل داخل العراق فقط. إذا كنت خارج العراق تواصل ويانا ونشوف الخيارات.</p></details>
-      <details><summary>شلون أطلب؟</summary><p>اضغط «أضف للطلب» على الجهاز، اكتب معلوماتك، وأرسل الطلب عبر واتساب. أو راسلنا مباشرة.</p></details>
-      <div class="faq-cta"><span>ما لگيت جوابك؟</span><a class="btn btn-amber" id="waFaq" href="#">راسلنا على واتساب</a></div>
+      <h2 id="faqTitle" data-i="faq_title">أسئلة شائعة</h2>
+      <div id="faqList"></div>
+      <div class="faq-cta"><span data-i="faq_cta">ما لگيت جوابك؟</span><a class="btn btn-amber" id="waFaq" href="#" data-i="faq_btn">راسلنا على واتساب</a></div>
     </div>
   </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span><b class="mono">OBDTech</b> — أدوات فحص وتشخيص السيارات، العراق</span>
-    <span>واتساب: <span class="mono">+964 788 371 0918</span></span>
+    <span><b class="mono">OBDTech</b> — <span data-i="footer">أدوات فحص وتشخيص السيارات، العراق</span></span>
+    <span><span data-i="footer_wa">واتساب:</span> <span class="mono">+964 788 371 0918</span></span>
   </div>
 </footer>
 
 <div class="cartbar" id="cartbar">
   <div class="sum" id="cartSum"></div>
-  <button class="btn btn-amber" type="button" id="openCart">إكمال الطلب</button>
+  <button class="btn btn-amber" type="button" id="openCart" data-i="checkout">إكمال الطلب</button>
 </div>
 
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="scrim" data-close></div>
   <div class="panel">
-    <button class="x" type="button" data-close aria-label="إغلاق">×</button>
-    <h2 id="sheetTitle">طلبك</h2>
+    <button class="x" type="button" data-close data-ia="close" aria-label="إغلاق">×</button>
+    <h2 id="sheetTitle" data-i="sheet_title">طلبك</h2>
     <div class="items" id="items"></div>
     <div class="totals" id="totals"></div>
     <form id="orderForm" novalidate>
       <div class="two">
-        <label for="fName">الاسم<input id="fName" name="name" autocomplete="name" required></label>
-        <label for="fPhone">رقم الهاتف<input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXXX" required></label>
+        <label for="fName"><span data-i="f_name">الاسم</span><input id="fName" name="name" autocomplete="name" required></label>
+        <label for="fPhone"><span data-i="f_phone">رقم الهاتف</span><input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXXX" required></label>
       </div>
       <div class="two">
-        <label for="fGov">المحافظة<select id="fGov" name="gov" required></select></label>
-        <label for="fArea">المنطقة / أقرب نقطة دالة<input id="fArea" name="area" required></label>
+        <label for="fGov"><span data-i="f_gov">المحافظة</span><select id="fGov" name="gov" required></select></label>
+        <label for="fArea"><span data-i="f_area">المنطقة / أقرب نقطة دالة</span><input id="fArea" name="area" required></label>
       </div>
-      <label for="fNote">ملاحظات (نوع السيارة، الموديل…)<textarea id="fNote" name="note" rows="2"></textarea></label>
+      <label for="fNote"><span data-i="f_note">ملاحظات (نوع السيارة، الموديل…)</span><textarea id="fNote" name="note" rows="2"></textarea></label>
       <p class="err" id="formErr" role="alert"></p>
-      <a class="btn btn-amber send" id="sendBtn" href="#">أرسل الطلب عبر واتساب</a>
-      <p class="note">يفتح واتساب برسالة جاهزة فيها تفاصيل طلبك. اضغط إرسال داخل واتساب لإتمام الطلب.</p>
+      <a class="btn btn-amber send" id="sendBtn" href="#" data-i="send">أرسل الطلب عبر واتساب</a>
+      <p class="note" data-i="send_note">يفتح واتساب برسالة جاهزة فيها تفاصيل طلبك. اضغط إرسال داخل واتساب لإتمام الطلب.</p>
     </form>
   </div>
 </div>
@@ -498,6 +504,20 @@ const P = [
   {id:"ts01",cat:"tpms",brand:"CGSULIT",model:"TS01",name:"حساس إطار يونيفرسال 315 + 433MHz",price:20000,tier:{min:10,price:18000},f:["20,000 للقطعة، 18,000 عند 10 قطع أو أكثر","Rubber أو Metal Valve","بطارية بعمر 5 سنوات أو أكثر"]}
 ];
 
+/* ---- languages: Arabic (default), English, Kurdish Sorani ---- */
+const T={"ar": {"nav_products": "المنتجات", "nav_how": "طريقة الطلب", "nav_faq": "الأسئلة", "whatsapp": "واتساب", "lamp": "أدوات فحص وتشخيص السيارات", "h1": "اعرف عطل سيارتك قبل ما توصل <em>للفيتر</em>", "lead": "أجهزة فحص OBD2، أدوات ورش، مبرمجات ECU وأجهزة قياس من أشهر الشركات. اختر جهازك واطلب مباشرة، والتوصيل لكل محافظات العراق.", "cta_browse": "تصفح المنتجات", "cta_ask": "اسألنا عن سيارتك", "fact_delivery": "التوصيل <b>5,000</b> د.ع لكل المحافظات", "fact_cod": "الدفع عند الاستلام", "fact_support": "دعم فني بالعربي", "tiles_aria": "تسوق حسب القسم", "tile_unit": "{n} جهاز", "cat_all": "الكل", "cat_obd": "أجهزة OBD2", "cat_scan": "أجهزة فحص احترافية", "cat_prog": "برمجة ECU", "cat_fluid": "فحص السوائل", "cat_bench": "محاكاة وفحص كهربائي", "cat_meter": "أجهزة قياس وأوسيلوسكوب", "cat_tpms": "TPMS", "cat_title": "المنتجات", "count": "{n} جهاز · التوصيل 5,000 دينار لكل المحافظات", "search_label": "ابحث عن جهاز", "search_ph": "ابحث: XTOOL، ملتيميتر، TPMS…", "chips_aria": "التصنيفات", "add": "أضف للطلب", "in_cart": "✓ بالطلب ({n})", "best": "الأكثر مبيعاً", "dinar": "دينار", "empty": "ما لگينا جهاز بهذا الاسم.", "empty_ask": "اسألنا على واتساب", "empty_msg": "مرحبا، أبحث عن جهاز: ", "how_title": "طريقة الطلب", "s1b": "اختر الأجهزة", "s1p": "اضغط «أضف للطلب» على أي جهاز. تقدر تجمع أكثر من جهاز بطلب واحد وتدفع توصيل مرة وحدة.", "s2b": "اكتب معلوماتك", "s2p": "الاسم، رقم الهاتف، المحافظة والعنوان.", "s3b": "أرسل عبر واتساب", "s3p": "يوصلنا الطلب جاهز، نأكد وياك ونرسل الجهاز. تدفع عند الاستلام.", "faq_title": "أسئلة شائعة", "faq_cta": "ما لگيت جوابك؟", "faq_btn": "راسلنا على واتساب", "footer": "أدوات فحص وتشخيص السيارات، العراق", "footer_wa": "واتساب:", "cart_sum": "{n} قطعة · <b>{t}</b> د.ع", "checkout": "إكمال الطلب", "sheet_title": "طلبك", "close": "إغلاق", "dec": "إنقاص", "inc": "زيادة", "f_name": "الاسم", "f_phone": "رقم الهاتف", "f_gov": "المحافظة", "f_area": "المنطقة / أقرب نقطة دالة", "f_note": "ملاحظات (نوع السيارة، الموديل…)", "choose": "اختر…", "send": "أرسل الطلب عبر واتساب", "send_note": "يفتح واتساب برسالة جاهزة فيها تفاصيل طلبك. اضغط إرسال داخل واتساب لإتمام الطلب.", "cart_empty": "الطلب فارغ. أضف جهاز من القائمة.", "t_products": "المنتجات", "t_delivery": "التوصيل", "t_total": "المجموع", "cur": "د.ع", "e_empty": "أضف جهاز واحد على الأقل.", "e_name": "اكتب اسمك.", "e_phone": "اكتب رقم هاتف عراقي صحيح، مثل 07XX XXX XXXX.", "e_gov": "اختر المحافظة.", "e_area": "اكتب المنطقة أو أقرب نقطة دالة.", "hello": "مرحبا OBDTech، عندي سؤال عن جهاز يناسب سيارتي.", "faq": [["هل تبيعون بالجملة؟", "نعم، نوفر أسعار جملة للمحلات والورش. تواصل ويانا على واتساب بالكمية المطلوبة ونرسلك السعر."], ["هل الجهاز يشتغل على سيارتي؟", "أغلب الأجهزة تشتغل على السيارات اللي بيها منفذ OBD2. دزلنا نوع السيارة والموديل والسنة ونگلك أي جهاز يناسبها."], ["كم أجور التوصيل؟", "5,000 دينار لكل محافظات العراق، لكل طلب مهما كان عدد الأجهزة."], ["كم يوم يوصل الطلب؟", "يعتمد على المحافظة. تواصل ويانا ونگلك موعد التوصيل لمنطقتك."], ["شلون أدفع؟", "الدفع نقداً عند استلام الطلب."], ["هل الأجهزة عليها ضمان؟", "نعم، تواصل ويانا ونوضح لك تفاصيل الضمان لكل جهاز."], ["هل تقدمون دعم فني بعد الشراء؟", "نعم، راسلنا بأي وقت ونساعدك بتشغيل الجهاز واستخدامه."], ["الجهاز اللي أريده مو موجود بالموقع؟", "تواصل ويانا واكتب اسم الجهاز، ونحاول نوفره إلك."], ["هل توصلون خارج العراق؟", "حالياً التوصيل داخل العراق فقط. إذا كنت خارج العراق تواصل ويانا ونشوف الخيارات."], ["شلون أطلب؟", "اضغط «أضف للطلب» على الجهاز، اكتب معلوماتك، وأرسل الطلب عبر واتساب. أو راسلنا مباشرة."]], "govs": ["بغداد", "البصرة", "نينوى", "أربيل", "النجف", "كربلاء", "بابل", "ذي قار", "الأنبار", "ديالى", "كركوك", "صلاح الدين", "واسط", "ميسان", "القادسية", "المثنى", "دهوك", "السليمانية", "حلبجة"]}, "en": {"nav_products": "Products", "nav_how": "How to order", "nav_faq": "FAQ", "whatsapp": "WhatsApp", "lamp": "Car diagnostic & testing tools", "h1": "Find your car's fault before you reach the <em>mechanic</em>", "lead": "OBD2 scanners, workshop tools, ECU programmers and meters from the best-known brands. Pick your device and order directly, with delivery to every governorate in Iraq.", "cta_browse": "Browse products", "cta_ask": "Ask about your car", "fact_delivery": "Delivery <b>5,000</b> IQD to all governorates", "fact_cod": "Cash on delivery", "fact_support": "Technical support", "tiles_aria": "Shop by category", "tile_unit": "{n} devices", "cat_all": "All", "cat_obd": "OBD2 scanners", "cat_scan": "Professional scanners", "cat_prog": "ECU programming", "cat_fluid": "Fluid testers", "cat_bench": "Simulators & electrical testing", "cat_meter": "Meters & oscilloscopes", "cat_tpms": "TPMS", "cat_title": "Products", "count": "{n} devices · Delivery 5,000 IQD to all governorates", "search_label": "Search for a device", "search_ph": "Search: XTOOL, multimeter, TPMS…", "chips_aria": "Categories", "add": "Add to order", "in_cart": "✓ In order ({n})", "best": "Best seller", "dinar": "IQD", "empty": "No device found with that name.", "empty_ask": "Ask us on WhatsApp", "empty_msg": "Hello, I'm looking for a device: ", "how_title": "How to order", "s1b": "Choose your devices", "s1p": "Tap “Add to order” on any device. You can combine several devices in one order and pay delivery only once.", "s2b": "Enter your details", "s2p": "Name, phone number, governorate and address.", "s3b": "Send via WhatsApp", "s3p": "Your order reaches us ready. We confirm with you and ship the device. You pay on delivery.", "faq_title": "Frequently asked questions", "faq_cta": "Didn't find your answer?", "faq_btn": "Message us on WhatsApp", "footer": "Car diagnostic tools, Iraq", "footer_wa": "WhatsApp:", "cart_sum": "{n} items · <b>{t}</b> IQD", "checkout": "Checkout", "sheet_title": "Your order", "close": "Close", "dec": "Decrease", "inc": "Increase", "f_name": "Name", "f_phone": "Phone number", "f_gov": "Governorate", "f_area": "Area / nearest landmark", "f_note": "Notes (car make, model…)", "choose": "Choose…", "send": "Send order via WhatsApp", "send_note": "WhatsApp opens with a ready message containing your order details. Tap send in WhatsApp to complete the order.", "cart_empty": "Your order is empty. Add a device from the list.", "t_products": "Products", "t_delivery": "Delivery", "t_total": "Total", "cur": "IQD", "e_empty": "Add at least one device.", "e_name": "Enter your name.", "e_phone": "Enter a valid Iraqi phone number, e.g. 07XX XXX XXXX.", "e_gov": "Choose your governorate.", "e_area": "Enter your area or nearest landmark.", "hello": "Hello OBDTech, I have a question about a device for my car.", "faq": [["Do you sell wholesale?", "Yes, we offer wholesale prices for shops and workshops. Message us on WhatsApp with the quantity you need and we'll send you a price."], ["Will the device work on my car?", "Most devices work on cars that have an OBD2 port. Send us your car's make, model and year and we'll tell you which device fits."], ["How much is delivery?", "5,000 IQD to all governorates of Iraq, per order, no matter how many devices."], ["How long does delivery take?", "It depends on the governorate. Contact us and we'll tell you the delivery time for your area."], ["How do I pay?", "Cash on delivery."], ["Do the devices come with a warranty?", "Yes, contact us and we'll explain the warranty details for each device."], ["Do you offer support after purchase?", "Yes, message us any time and we'll help you set up and use your device."], ["The device I want isn't on the site?", "Contact us with the device name and we'll try to get it for you."], ["Do you deliver outside Iraq?", "Currently we deliver inside Iraq only. If you're outside Iraq, contact us and we'll look at the options."], ["How do I order?", "Tap “Add to order” on the device, enter your details and send the order via WhatsApp. Or message us directly."]], "govs": ["Baghdad", "Basra", "Nineveh", "Erbil", "Najaf", "Karbala", "Babil", "Dhi Qar", "Anbar", "Diyala", "Kirkuk", "Salahaddin", "Wasit", "Maysan", "Al-Qadisiyah", "Muthanna", "Duhok", "Sulaymaniyah", "Halabja"]}, "ckb": {"nav_products": "بەرهەمەکان", "nav_how": "چۆنیەتی داواکردن", "nav_faq": "پرسیارەکان", "whatsapp": "واتساپ", "lamp": "ئامێرەکانی پشکنینی ئۆتۆمبێل", "h1": "کێشەی ئۆتۆمبێلەکەت بزانە پێش ئەوەی بگەیتە لای <em>وەستا</em>", "lead": "سکانەری OBD2، ئامرازی گەراج، پرۆگرامەری ECU و ئامێری پێوانە لە ناسراوترین کۆمپانیاکان. ئامێرەکەت هەڵبژێرە و ڕاستەوخۆ داوای بکە، گەیاندن بۆ هەموو پارێزگاکانی عێراق.", "cta_browse": "سەیری بەرهەمەکان بکە", "cta_ask": "دەربارەی ئۆتۆمبێلەکەت پرسیار بکە", "fact_delivery": "گەیاندن <b>5,000</b> دینار بۆ هەموو پارێزگاکان", "fact_cod": "پارەدان لە کاتی وەرگرتن", "fact_support": "پشتگیری تەکنیکی", "tiles_aria": "کڕین بەپێی بەش", "tile_unit": "{n} ئامێر", "cat_all": "هەموو", "cat_obd": "سکانەری OBD2", "cat_scan": "ئامێری پشکنینی پرۆفیشناڵ", "cat_prog": "پرۆگرامکردنی ECU", "cat_fluid": "پشکنینی شلەمەنییەکان", "cat_bench": "سیمولەیتەر و پشکنینی کارەبایی", "cat_meter": "پێوەر و ئۆسیلۆسکۆپ", "cat_tpms": "TPMS", "cat_title": "بەرهەمەکان", "count": "{n} ئامێر · گەیاندن 5,000 دینار بۆ هەموو پارێزگاکان", "search_label": "گەڕان بۆ ئامێر", "search_ph": "گەڕان: XTOOL، مەڵتیمیتەر، TPMS…", "chips_aria": "بەشەکان", "add": "زیادکردن بۆ داواکاری", "in_cart": "✓ لە داواکاریدا ({n})", "best": "زۆرترین فرۆشراو", "dinar": "دینار", "empty": "هیچ ئامێرێک بەو ناوە نەدۆزرایەوە.", "empty_ask": "لە واتساپ لێمان بپرسە", "empty_msg": "سڵاو، بەدوای ئامێرێکدا دەگەڕێم: ", "how_title": "چۆنیەتی داواکردن", "s1b": "ئامێرەکان هەڵبژێرە", "s1p": "کرتە لە «زیادکردن بۆ داواکاری» بکە لەسەر هەر ئامێرێک. دەتوانیت چەند ئامێرێک لە یەک داواکاریدا کۆبکەیتەوە و تەنها یەک جار کرێی گەیاندن بدەیت.", "s2b": "زانیارییەکانت بنووسە", "s2p": "ناو، ژمارەی مۆبایل، پارێزگا و ناونیشان.", "s3b": "لە ڕێگەی واتساپەوە بینێرە", "s3p": "داواکارییەکەت ئامادە دەگاتە لامان، لەگەڵت پشتڕاستی دەکەینەوە و ئامێرەکە دەنێرین. لە کاتی وەرگرتن پارە دەدەیت.", "faq_title": "پرسیارە باوەکان", "faq_cta": "وەڵامەکەت نەدۆزییەوە؟", "faq_btn": "لە واتساپ نامەمان بۆ بنێرە", "footer": "ئامێرەکانی پشکنینی ئۆتۆمبێل، عێراق", "footer_wa": "واتساپ:", "cart_sum": "{n} پارچە · <b>{t}</b> دینار", "checkout": "تەواوکردنی داواکاری", "sheet_title": "داواکارییەکەت", "close": "داخستن", "dec": "کەمکردنەوە", "inc": "زیادکردن", "f_name": "ناو", "f_phone": "ژمارەی مۆبایل", "f_gov": "پارێزگا", "f_area": "ناوچە / نزیکترین شوێنی ناسراو", "f_note": "تێبینی (جۆری ئۆتۆمبێل، مۆدێل…)", "choose": "هەڵبژێرە…", "send": "ناردنی داواکاری لە ڕێگەی واتساپ", "send_note": "واتساپ بە نامەیەکی ئامادە دەکرێتەوە کە وردەکاری داواکارییەکەتی تێدایە. لە واتساپدا کرتە لە ناردن بکە بۆ تەواوکردنی داواکاری.", "cart_empty": "داواکارییەکەت بەتاڵە. ئامێرێک لە لیستەکە زیاد بکە.", "t_products": "بەرهەمەکان", "t_delivery": "گەیاندن", "t_total": "کۆی گشتی", "cur": "دینار", "e_empty": "لانیکەم یەک ئامێر زیاد بکە.", "e_name": "ناوەکەت بنووسە.", "e_phone": "ژمارەیەکی مۆبایلی عێراقی دروست بنووسە، وەک 07XX XXX XXXX.", "e_gov": "پارێزگاکەت هەڵبژێرە.", "e_area": "ناوچەکەت یان نزیکترین شوێنی ناسراو بنووسە.", "hello": "سڵاو OBDTech، پرسیارێکم هەیە دەربارەی ئامێرێک بۆ ئۆتۆمبێلەکەم.", "faq": [["ئایا بە کۆ (جوملە) دەفرۆشن؟", "بەڵێ، نرخی کۆمان هەیە بۆ دوکان و گەراجەکان. لە واتساپ بە بڕی پێویست نامەمان بۆ بنێرە و نرخت بۆ دەنێرین."], ["ئایا ئامێرەکە لەسەر ئۆتۆمبێلەکەم کار دەکات؟", "زۆربەی ئامێرەکان لەسەر ئەو ئۆتۆمبێلانە کار دەکەن کە دەرچەی OBD2یان هەیە. جۆر و مۆدێل و ساڵی ئۆتۆمبێلەکەت بۆمان بنێرە و پێت دەڵێین کام ئامێر گونجاوە."], ["کرێی گەیاندن چەندە؟", "5,000 دینار بۆ هەموو پارێزگاکانی عێراق، بۆ هەر داواکارییەک بە هەر ژمارەیەک ئامێر."], ["گەیاندن چەند ڕۆژ دەخایەنێت؟", "بەپێی پارێزگاکە دەگۆڕێت. پەیوەندیمان پێوە بکە و کاتی گەیاندن بۆ ناوچەکەت پێ دەڵێین."], ["چۆن پارە بدەم؟", "بە نەختی لە کاتی وەرگرتنی داواکارییەکە."], ["ئایا ئامێرەکان گەرەنتییان هەیە؟", "بەڵێ، پەیوەندیمان پێوە بکە و وردەکاری گەرەنتی هەر ئامێرێکت بۆ ڕوون دەکەینەوە."], ["ئایا دوای کڕین پشتگیری تەکنیکی پێشکەش دەکەن؟", "بەڵێ، هەر کاتێک نامەمان بۆ بنێرە و یارمەتیت دەدەین لە کارپێکردن و بەکارهێنانی ئامێرەکە."], ["ئەو ئامێرەی دەمەوێت لە ماڵپەڕەکەدا نییە؟", "پەیوەندیمان پێوە بکە و ناوی ئامێرەکە بنووسە، هەوڵ دەدەین بۆتی دابین بکەین."], ["ئایا بۆ دەرەوەی عێراق دەگەیەنن؟", "لە ئێستادا تەنها لە ناو عێراق دەگەیەنین. ئەگەر لە دەرەوەی عێراقیت پەیوەندیمان پێوە بکە و بژاردەکان دەبینین."], ["چۆن داوا بکەم؟", "کرتە لە «زیادکردن بۆ داواکاری» بکە، زانیارییەکانت بنووسە و داواکارییەکە لە ڕێگەی واتساپەوە بنێرە. یان ڕاستەوخۆ نامەمان بۆ بنێرە."]], "govs": ["بەغدا", "بەسرە", "نەینەوا", "هەولێر", "نەجەف", "کەربەلا", "بابل", "زیقار", "ئەنبار", "دیالە", "کەرکووک", "سەڵاحەدین", "واست", "میسان", "قادسیە", "موسەننا", "دهۆک", "سلێمانی", "هەڵەبجە"]}};
+const PT={"usta": {"en": ["Usta OBD — AI-powered smart diagnostics", ["AI explains faults and suggests fixes", "Live data and PDF reports", "Arabic, Kurdish, English"]], "ckb": ["ئوستا OBD — پشکنینی زیرەک بە ژیریی دەستکرد", ["ڕوونکردنەوەی کێشەکان و پێشنیاری چارەسەر بە ژیریی دەستکرد", "داتای ڕاستەوخۆ و ڕاپۆرتی PDF", "عەرەبی، کوردی، ئینگلیزی"]]}, "bt80": {"en": ["Battery & charging system tester + OBD2", ["Battery health SOH and voltage", "Cranking test and charging test", "Read and clear engine codes, Arabic interface"]], "ckb": ["پشکنەری پاتری و سیستەمی بارگاویکردن + OBD2", ["تەندروستی پاتری SOH و ڤۆڵتیە", "تاقیکردنەوەی ستارت Cranking و تاقیکردنەوەی بارگاویکردن", "خوێندنەوە و سڕینەوەی کۆدی بزوێنەر، ڕووکاری عەرەبی"]]}, "crb3001": {"en": ["OBD2 scanner + battery tester", ["OBD2 vehicle diagnostics", "Battery and alternator test", "2.8-inch color screen"]], "ckb": ["سکانەری OBD2 + پشکنەری پاتری", ["پشکنینی ئۆتۆمبێل لە ڕێگەی OBD2", "پشکنینی پاتری و داینەمۆ", "شاشەی ڕەنگاوڕەنگی 2.8 ئینج"]]}, "vmc": {"en": ["Bluetooth OBD2 reader for most cars", ["Android and iPhone", "Supports GM GMLAN and Ford MS-CAN", "Works with Torque, Car Scanner and Carista"]], "ckb": ["خوێنەرەوەی OBD2 بە بلوتوس بۆ زۆربەی ئۆتۆمبێلەکان", ["ئەندرۆید و ئایفۆن", "پشتگیری GM GMLAN و Ford MS-CAN", "لەگەڵ Torque و Car Scanner و Carista کار دەکات"]]}, "vms": {"en": ["Professional version with FORScan support", ["Android and iPhone (MFi)", "Scan, clear and log data", "Low power consumption"]], "ckb": ["وەشانی پرۆفیشناڵ، پشتگیری FORScan دەکات", ["ئەندرۆید و ئایفۆن (MFi)", "پشکنین، سڕینەوە و تۆمارکردنی داتا", "بەکارهێنانی کەمی وزە"]]}, "vfs": {"en": ["Made for FORScan: Ford, Lincoln, Mazda", ["Automatic HS-CAN / MS-CAN switching", "Supports 12V and 24V", "Supports FEPS programming"]], "ckb": ["تایبەت بە FORScan: فۆرد، لینکۆڵن، مازدا", ["گۆڕینی خۆکاری HS-CAN / MS-CAN", "پشتگیری 12V و 24V", "پشتگیری پرۆگرامکردنی FEPS"]]}, "vbm": {"en": ["Made for BMW and MINI", ["BimmerCode / BimmerLink", "Bluetooth 4.0", "Read and clear faults + live data"]], "ckb": ["تایبەت بە BMW و MINI", ["BimmerCode / BimmerLink", "بلوتوس 4.0", "خوێندنەوە و سڕینەوەی کێشەکان + داتای ڕاستەوخۆ"]]}, "ediag": {"en": ["Smart diagnostic tool, no yearly subscription", ["Oil reset and electronic parking brake EPB", "Battery BMS reset and steering angle SAS", "TPMS sensor reset"]], "ckb": ["ئامێری پشکنینی زیرەک بەبێ بەشداریکردنی ساڵانە", ["سفرکردنەوەی ڕۆن و بریکی دەستی EPB", "ڕێکخستنی پاتری BMS و گۆشەی سوکان SAS", "سفرکردنەوەی هەستەوەرەکانی TPMS"]]}, "mucar": {"en": ["Full-system diagnostics with AI", ["Engine, gearbox, ABS, airbag", "Service and reset functions", "Suited for workshops"]], "ckb": ["پشکنینی هەموو سیستەمەکان بە ژیریی دەستکرد", ["بزوێنەر، گێڕ، ABS، ئێربەگ", "کارەکانی چاککردنەوە و ڕێکخستنەوە", "گونجاو بۆ گەراجەکان"]]}, "a30m": {"en": ["Complete scanner for technicians and workshops", ["Over 7,000 fault codes", "ABS, SRS, ECM, TCM, TPMS, BMS", "No subscription, free updates"]], "ckb": ["سکانەری تەواو بۆ تەکنیکار و گەراجەکان", ["زیاتر لە 7000 کۆدی کێشە", "ABS، SRS، ECM، TCM، TPMS، BMS", "بەبێ بەشداریکردن، نوێکردنەوەی بێبەرامبەر"]]}, "a30x": {"en": ["Pocket-size handheld scanner", ["Full-system diagnostics", "Active tests", "Over 26 service functions"]], "ckb": ["سکانەری دەستی بە قەبارەی گیرفان", ["پشکنینی هەموو سیستەمەکان", "تاقیکردنەوەی چالاک (Active Test)", "زیاتر لە 26 کرداری چاککردنەوە"]]}, "rlink": {"en": ["Pass-Thru interface that replaces 13+ dealer tools", ["Official online programming", "Compatible with dealer (OEM) software", "Supports CAN-FD and DoIP"]], "ckb": ["ڕووکاری Pass-Thru لە جیاتی زیاتر لە 13 ئامێری وەکالە", ["پرۆگرامکردنی فەرمی ئۆنلاین", "گونجاو لەگەڵ بەرنامەکانی وەکالە (OEM)", "پشتگیری CAN-FD و DoIP"]]}, "sm2": {"en": ["ECU & TCU programmer with 3 dongles", ["67 open-protocol modules", "Read and write ECU and TCU", "OBD, Bench and Boot modes"]], "ckb": ["پرۆگرامەری ECU و TCU لەگەڵ 3 دۆنگڵ", ["67 مۆدیوڵی پرۆتۆکۆڵی کراوە", "خوێندنەوە و نووسینی ECU و TCU", "دۆخەکانی OBD و Bench و Boot"]]}, "ktag": {"en": ["Read and write ECU units", ["Bench and Boot modes", "ECU recovery and cloning", "Bosch, Siemens and Delphi"]], "ckb": ["خوێندنەوە و نووسینی یەکەکانی ECU", ["دۆخەکانی Bench و Boot", "گەڕاندنەوە و کۆپیکردنی ECU", "Bosch و Siemens و Delphi"]]}, "kess": {"en": ["Programming through the OBD-II port", ["Read and write ECU without opening it", "Stage 1 performance tuning", "Fast and easy to use"]], "ckb": ["پرۆگرامکردن لە ڕێگەی دەرچەی OBD-II", ["خوێندنەوە و نووسینی ECU بەبێ کردنەوەی", "باشترکردنی توانا Stage 1", "خێرا و ئاسان بۆ بەکارهێنان"]]}, "iprog": {"en": ["Chip programmer with 7 adapters", ["Read and write EEPROM and MCU", "Airbag modules and dashboards", "BCM repair"]], "ckb": ["پرۆگرامەری چیپ لەگەڵ 7 ئەداپتەر", ["خوێندنەوە و نووسینی EEPROM و MCU", "یەکەکانی ئێربەگ و عەدادەکان", "چاککردنەوەی یەکەکانی BCM"]]}, "openport": {"en": ["J2534 interface, Full Chip Rev E", ["CAN, ISO 9141, KWP2000, K-Line", "USB 2.0 connection", "Suited for Subaru, Mitsubishi and more"]], "ckb": ["ڕووکاری J2534، وەشانی Full Chip Rev E", ["CAN، ISO 9141، KWP2000، K-Line", "پەیوەندی USB 2.0", "گونجاو بۆ سوبارو و میتسوبیشی و هیتر"]]}, "as503": {"en": ["Engine oil tester", ["Analyzes oil condition and quality", "Shows the right time to change oil"]], "ckb": ["پشکنەری ڕۆنی بزوێنەر", ["شیکردنەوەی دۆخ و کوالیتی ڕۆن", "دیاریکردنی کاتی گونجاو بۆ گۆڕینی ڕۆن"]]}, "as505": {"en": ["Transmission fluid (ATF) tester", ["Measures temperature and transmittance", "Supports 5V and 6V fluids"]], "ckb": ["پشکنەری ڕۆنی گێڕ ATF", ["پێوانی پلەی گەرمی و ڕوونی", "پشتگیری ڕۆنی 5V و 6V"]]}, "as507": {"en": ["Power steering fluid tester", ["Quick fluid condition check", "Measures temperature"]], "ckb": ["پشکنەری ڕۆنی پاوەر ستێرینگ", ["پشکنینی خێرای دۆخی شلەکە", "پێوانی پلەی گەرمی"]]}, "as502": {"en": ["DOT brake fluid tester", ["Detects moisture level", "Compact and easy to use"]], "ckb": ["پشکنەری شلەی بریک DOT", ["دۆزینەوەی ڕێژەی شێ", "بچووک و ئاسان بۆ بەکارهێنان"]]}, "qdb5a": {"en": ["One tool that covers half the workshop's work", ["Tests ignition coils and injectors", "Drives solenoids and stepper motors", "Built-in oscilloscope for ignition waveform"]], "ckb": ["یەک ئامێر کە نیوەی کاری گەراج دەکات", ["پشکنینی کۆیل و بخاخەکان", "کارپێکردنی سۆلینۆید و Stepper Motor", "ئۆسیلۆسکۆپی ناوەکی بۆ شەپۆلی ئیشتیعال"]]}, "yc600": {"en": ["Crank & cam signal simulator CKP / CMP", ["Hall and magnetoelectric signals", "Runs on 12–24 V", "For testing ECU circuits"]], "ckb": ["سیمولەیتەری ئیشارەتی کرانک و کام CKP / CMP", ["ئیشارەتی Hall و Magnetoelectric", "لەسەر 12–24 ڤۆڵت کار دەکات", "بۆ پشکنینی سێرکیتەکانی ECU"]]}, "pd60": {"en": ["Injection & ignition simulator for ECU repair", ["Simulates injectors and coils", "Petrol and diesel", "CAN Bus analysis"]], "ckb": ["سیمولەیتەری بخاخ و ئیشتیعال بۆ چاککردنی ECU", ["سیمولەیشنی بخاخ و کۆیلەکان", "بەنزین و دیزڵ", "شیکردنەوەی CAN Bus"]]}, "xh300": {"en": ["Car sensor signal generator", ["Test ECU and wiring without running the engine", "Accurate sensor simulation"]], "ckb": ["دروستکەری ئیشارەتی هەستەوەرەکانی ئۆتۆمبێل", ["پشکنینی ECU و وایەرەکان بەبێ ئیشپێکردنی بزوێنەر", "سیمولەیشنی وردی هەستەوەرەکان"]]}, "ig80": {"en": ["Ignition coil tester", ["Finds a weak coil in seconds", "Avoids unnecessary replacements"]], "ckb": ["پشکنەری کۆیلی ئیشتیعال", ["دۆزینەوەی کۆیلی لاواز لە چەند چرکەیەکدا", "کەمکردنەوەی گۆڕینی بێ پێویست"]]}, "cnbj": {"en": ["Fuel injector tester", ["Test without running the engine", "4 test modes"]], "ckb": ["پشکنەری بخاخ", ["پشکنین بەبێ ئیشپێکردنی بزوێنەر", "4 دۆخی پشکنین"]]}, "p100": {"en": ["Power probe with 10 m cable", ["12V and 24V: cars and trucks", "Activates components directly", "Short-circuit protection"]], "ckb": ["پاوەر پرۆب بە کێبڵی 10 مەتر", ["12V و 24V: ئۆتۆمبێل و بارهەڵگر", "کارپێکردنی ڕاستەوخۆی پارچەکان", "پاراستن لە شۆرت"]]}, "p60": {"en": ["Multi-purpose power probe", ["Works on 6–30 V", "0–8 A activation current", "4 m cable"]], "ckb": ["پاوەر پرۆبی فرە بەکارهێنان", ["لەسەر 6–30V کار دەکات", "تەزووی چالاککردن 0–8A", "کێبڵی 4 مەتر"]]}, "rt01": {"en": ["Car relay tester", ["Test without removing", "Powered by the car battery, 11–25 V", "LED indicators"]], "ckb": ["پشکنەری ڕیلەی ئۆتۆمبێل", ["پشکنین بەبێ هەڵوەشاندنەوە", "لە پاتری ئۆتۆمبێلەوە کار دەکات 11–25V", "نیشاندەری LED"]]}, "f1013d": {"en": ["Two-channel tablet oscilloscope", ["Reads CAN High and CAN Low", "Touch screen", "Tests sensors and ECU"]], "ckb": ["ئۆسیلۆسکۆپی تابلێتی دوو کەناڵ", ["خوێندنەوەی CAN High و CAN Low", "شاشەی دەستلێدان", "پشکنینی هەستەوەر و ECU"]]}, "f2c53t": {"en": ["Oscilloscope + multimeter + signal generator", ["Two channels at once", "CAN network analysis"]], "ckb": ["ئۆسیلۆسکۆپ + مەڵتیمیتەر + دروستکەری ئیشارەت", ["دوو کەناڵ لە یەک کاتدا", "شیکردنەوەی تۆڕی CAN"]]}, "f2c23t": {"en": ["Oscilloscope + multimeter + signal generator", ["Two channels at once", "CAN network analysis"]], "ckb": ["ئۆسیلۆسکۆپ + مەڵتیمیتەر + دروستکەری ئیشارەت", ["دوو کەناڵ لە یەک کاتدا", "شیکردنەوەی تۆڕی CAN"]]}, "dso510": {"en": ["Professional handheld oscilloscope", ["10 MHz and 48 MS/s", "Built-in signal generator", "Tests coils and injectors"]], "ckb": ["ئۆسیلۆسکۆپی دەستی پرۆفیشناڵ", ["10MHz و 48MS/s", "دروستکەری ئیشارەتی ناوەکی", "پشکنینی کۆیل و بخاخەکان"]]}, "dso152": {"en": ["Oscilloscope for training and basic repair", ["200 kHz and 2.5 MS/s", "USB-C charging"]], "ckb": ["ئۆسیلۆسکۆپ بۆ ڕاهێنان و چاککردنەوەی سەرەتایی", ["200KHz و 2.5MS/s", "بارگاویکردن بە Type-C"]]}, "ctg20": {"en": ["Paint thickness gauge", ["0–1400 microns", "Accuracy ±3% + 2 microns"]], "ckb": ["پێوەری ئەستووری بۆیە", ["0–1400 مایکرۆن", "وردی ±3% + 2 مایکرۆن"]]}, "a681": {"en": ["Smart multimeter, 6000 counts", ["Automatic signal recognition", "NCV non-contact voltage detection", "USB-C charging"]], "ckb": ["مەڵتیمیتەری زیرەک 6000 Count", ["ناسینەوەی خۆکاری ئیشارەت", "NCV دۆزینەوەی ڤۆڵتیە بەبێ دەستلێدان", "بارگاویکردن بە Type-C"]]}, "a682": {"en": ["Multimeter with color screen", ["6000 counts", "Built-in flashlight", "USB-C charging"]], "ckb": ["مەڵتیمیتەر بە شاشەی ڕەنگاوڕەنگ", ["6000 Count", "گڵۆپی ناوەکی", "بارگاویکردن بە Type-C"]]}, "a683": {"en": ["Touch-screen multimeter", ["6000 counts", "Frequency measurement", "USB-C charging"]], "ckb": ["مەڵتیمیتەر بە شاشەی دەستلێدان", ["6000 Count", "پێوانی لەرەلەر", "بارگاویکردن بە Type-C"]]}, "p130": {"en": ["AC / DC clamp meter", ["Measure current without cutting wires", "Voltage, resistance, capacitance, frequency"]], "ckb": ["کلامپ میتەری AC / DC", ["پێوانی تەزوو بەبێ بڕینی وایەر", "ڤۆڵتیە، بەرگری، توانای خەزنکردن، لەرەلەر"]]}, "gn807": {"en": ["Gas leak detector", ["LPG cars and gas lines", "Workshops and generators"]], "ckb": ["دۆزەرەوەی دزەی گاز", ["ئۆتۆمبێلی LPG و هێڵەکانی گاز", "گەراج و مۆلیدەکان"]]}, "ta500c": {"en": ["RPM tachometer", ["2-in-1 measuring system"]], "ckb": ["پێوەری خێرایی سوڕانەوە RPM", ["سیستەمی پێوانی 2 لە 1"]]}, "ta636a": {"en": ["Lux light meter", ["Tests headlights, LED and xenon", "Workshops and solar projects"]], "ckb": ["پێوەری توندی ڕووناکی Lux", ["پشکنینی گڵۆپی پێشەوە و LED و زینۆن", "گەراج و پرۆژەکانی وزەی خۆر"]]}, "sl106": {"en": ["Professional soldering iron", ["Up to 520°C", "Fast heating", "For ECU repair"]], "ckb": ["کاویەی لەحیمکردنی پرۆفیشناڵ", ["گەرمی تا 520°C", "گەرمبوونی خێرا", "بۆ چاککردنی یەکەکانی ECU"]]}, "tpms90": {"en": ["TPMS programming tool with 4 sensors", ["Program, activate and clone sensor IDs", "OBD Relearn", "Live pressure and temperature"]], "ckb": ["ئامێری پرۆگرامکردنی TPMS لەگەڵ 4 هەستەوەر", ["پرۆگرامکردن، چالاککردن و کۆپیکردنی ID هەستەوەر", "OBD Relearn", "پیشاندانی ڕاستەوخۆی پەستان و گەرمی"]]}, "ts01": {"en": ["Universal tire sensor 315 + 433 MHz", ["20,000 IQD each, 18,000 for 10 or more", "Rubber or metal valve", "Battery life of 5+ years"]], "ckb": ["هەستەوەری تایەی گشتی 315 + 433MHz", ["هەر دانەیەک 20,000، 18,000 بۆ 10 دانە یان زیاتر", "بلفی لاستیک یان کانزا", "تەمەنی پاتری 5 ساڵ یان زیاتر"]]}};
+
+let LANG=(function(){
+  const u=new URLSearchParams(location.search).get("lang");
+  if(u&&T[u])return u;
+  try{const v=localStorage.getItem("obd_lang");if(v&&T[v])return v}catch(e){}
+  return "ar";
+})();
+function L(k,vars){let v=(T[LANG][k]!==undefined?T[LANG][k]:T.ar[k]);if(vars&&typeof v==="string")for(const x in vars)v=v.split("{"+x+"}").join(vars[x]);return v}
+function pName(p){return LANG==="ar"?p.name:((PT[p.id]&&PT[p.id][LANG])?PT[p.id][LANG][0]:p.name)}
+function pF(p){return LANG==="ar"?p.f:((PT[p.id]&&PT[p.id][LANG])?PT[p.id][LANG][1]:p.f)}
+function pSearch(p){let s=p.brand+" "+p.model+" "+p.name+" "+p.f.join(" ");const x=PT[p.id];if(x)for(const l in x)s+=" "+x[l][0]+" "+x[l][1].join(" ");return s.toLowerCase()}
 const GOVS=["بغداد","البصرة","نينوى","أربيل","النجف","كربلاء","بابل","ذي قار","الأنبار","ديالى","كركوك","صلاح الدين","واسط","ميسان","القادسية","المثنى","دهوك","السليمانية","حلبجة"];
 
 const GLYPH={
@@ -522,7 +542,7 @@ function unitPrice(p,qty){return p.tier && qty>=p.tier.min ? p.tier.price : p.pr
 function renderChips(){
   chips.innerHTML=CATS.map(c=>{
     const n=c.id==="all"?P.length:P.filter(p=>p.cat===c.id).length;
-    return `<button class="chip" type="button" data-cat="${c.id}" aria-pressed="${c.id===cat}"><bdi>${c.name}</bdi><span class="n">${n}</span></button>`;
+    return `<button class="chip" type="button" data-cat="${c.id}" aria-pressed="${c.id===cat}"><bdi>${L("cat_"+c.id)}</bdi><span class="n">${n}</span></button>`;
   }).join("");
 }
 
@@ -531,23 +551,23 @@ function card(p){
   const src=p.img||`images/${p.id}.jpg`;
   const img=`<img src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`;
   return `<article class="card">
-    <div class="plate">${img}<span class="glyph" aria-hidden="true">${GLYPH[p.cat]}</span>${p.best?'<span class="badge">الأكثر مبيعاً</span>':""}
+    <div class="plate">${img}<span class="glyph" aria-hidden="true">${GLYPH[p.cat]}</span>${p.best?`<span class="badge">${L("best")}</span>`:""}
       <div class="brand">${p.brand.toUpperCase()}</div><div class="model">${p.model}</div></div>
     <div class="body">
       <div class="mdl">${p.brand.toUpperCase()} · ${p.model}</div>
-      <h3>${p.name}</h3>
-      <ul>${p.f.map(x=>`<li>${x}</li>`).join("")}</ul>
-      <div class="foot"><span class="price">${fmt(p.price)}<small>دينار</small></span>
-        <button class="add${inCart?" in":""}" type="button" data-add="${p.id}">${inCart?"✓ بالطلب ("+inCart+")":"أضف للطلب"}</button></div>
+      <h3>${pName(p)}</h3>
+      <ul>${pF(p).map(x=>`<li>${x}</li>`).join("")}</ul>
+      <div class="foot"><span class="price">${fmt(p.price)}<small>${L("dinar")}</small></span>
+        <button class="add${inCart?" in":""}" type="button" data-add="${p.id}">${inCart?L("in_cart",{n:inCart}):L("add")}</button></div>
     </div></article>`;
 }
 
 function renderGrid(anim){
   const s=q.trim().toLowerCase();
-  const list=P.filter(p=>(cat==="all"||p.cat===cat)&&(!s||(p.brand+" "+p.model+" "+p.name+" "+p.f.join(" ")).toLowerCase().includes(s)));
+  const list=P.filter(p=>(cat==="all"||p.cat===cat)&&(!s||pSearch(p).includes(s)));
   grid.classList.toggle("anim",!!anim);
-  grid.innerHTML=list.length?list.map((p,i)=>card(p).replace('<article class="card"',`<article class="card" style="--i:${Math.min(i,12)}"`)).join(""):`<p class="empty">ما لگينا جهاز بهذا الاسم. <a href="${waLink("مرحبا، أبحث عن جهاز: "+q)}">اسألنا على واتساب</a></p>`;
-  document.getElementById("count").textContent=`${list.length} جهاز · التوصيل 5,000 دينار لكل المحافظات`;
+  grid.innerHTML=list.length?list.map((p,i)=>card(p).replace('<article class="card"',`<article class="card" style="--i:${Math.min(i,12)}"`)).join(""):`<p class="empty">${L("empty")} <a href="${waLink(L("empty_msg")+q)}">${L("empty_ask")}</a></p>`;
+  document.getElementById("count").textContent=L("count",{n:list.length});
 }
 
 function totals(){
@@ -560,16 +580,16 @@ function renderCart(){
   const t=totals();
   const bar=document.getElementById("cartbar");
   bar.classList.toggle("show",t.n>0);
-  document.getElementById("cartSum").innerHTML=`${t.n} قطعة · <b>${fmt(t.grand)}</b> د.ع`;
+  document.getElementById("cartSum").innerHTML=L("cart_sum",{n:t.n,t:fmt(t.grand)});
   document.getElementById("items").innerHTML=Object.entries(cart).map(([id,qty])=>{
     const p=byId[id],u=unitPrice(p,qty);
     return `<div class="item"><span class="nm">${p.brand} ${p.model}</span>
-      <div class="qty"><button type="button" data-dec="${id}" aria-label="إنقاص">−</button><output>${qty}</output><button type="button" data-inc="${id}" aria-label="زيادة">+</button></div>
+      <div class="qty"><button type="button" data-dec="${id}" aria-label="${L("dec")}">−</button><output>${qty}</output><button type="button" data-inc="${id}" aria-label="${L("inc")}">+</button></div>
       <span class="pp">${fmt(u)} × ${qty} = ${fmt(u*qty)}</span></div>`;
-  }).join("")||'<p class="note">الطلب فارغ. أضف جهاز من القائمة.</p>';
-  document.getElementById("totals").innerHTML=`<div><span>المنتجات</span><span>${fmt(t.sub)}</span></div>
-    <div><span>التوصيل</span><span>${fmt(t.n?DELIVERY:0)}</span></div>
-    <div class="grand"><span>المجموع</span><span>${fmt(t.grand)} د.ع</span></div>`;
+  }).join("")||`<p class="note">${L("cart_empty")}</p>`;
+  document.getElementById("totals").innerHTML=`<div><span>${L("t_products")}</span><span>${fmt(t.sub)}</span></div>
+    <div><span>${L("t_delivery")}</span><span>${fmt(t.n?DELIVERY:0)}</span></div>
+    <div class="grand"><span>${L("t_total")}</span><span>${fmt(t.grand)} ${L("cur")}</span></div>`;
   renderGrid();
 }
 
@@ -601,17 +621,17 @@ function orderText(){
   const lines=Object.entries(cart).map(([id,qty])=>{const p=byId[id],u=unitPrice(p,qty);return `• ${p.brand} ${p.model} × ${qty} = ${fmt(u*qty)} د.ع`});
   return ["طلب جديد من موقع OBDTech","",...lines,"",`المنتجات: ${fmt(t.sub)} د.ع`,`التوصيل: ${fmt(DELIVERY)} د.ع`,`المجموع: ${fmt(t.grand)} د.ع`,"",
     `الاسم: ${f.name.value.trim()}`,`الهاتف: ${f.phone.value.trim()}`,`المحافظة: ${f.gov.value}`,`العنوان: ${f.area.value.trim()}`,
-    f.note.value.trim()?`ملاحظات: ${f.note.value.trim()}`:"","",`المصدر: ${SOURCE.label}`].filter((l,i,a)=>!(l===""&&a[i-1]==="")).join("\n").trim();
+    f.note.value.trim()?`ملاحظات: ${f.note.value.trim()}`:"","",`المصدر: ${SOURCE.label}`,LANG!=="ar"?`لغة الزبون: ${LANG==="en"?"English":"کوردی"}`:""].filter((l,i,a)=>!(l===""&&a[i-1]==="")).join("\n").trim();
 }
 
 function validate(){
   const f=document.getElementById("orderForm");
   const phone=f.phone.value.replace(/[\s\-]/g,"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
-  if(!totals().n) return "أضف جهاز واحد على الأقل.";
-  if(!f.name.value.trim()) return "اكتب اسمك.";
-  if(!/^(\+?964|0)?7\d{9}$/.test(phone)) return "اكتب رقم هاتف عراقي صحيح، مثل 07XX XXX XXXX.";
-  if(!f.gov.value) return "اختر المحافظة.";
-  if(!f.area.value.trim()) return "اكتب المنطقة أو أقرب نقطة دالة.";
+  if(!totals().n) return L("e_empty");
+  if(!f.name.value.trim()) return L("e_name");
+  if(!/^(\+?964|0)?7\d{9}$/.test(phone)) return L("e_phone");
+  if(!f.gov.value) return L("e_gov");
+  if(!f.area.value.trim()) return L("e_area");
   return "";
 }
 
@@ -649,22 +669,43 @@ document.getElementById("q").addEventListener("input",e=>{q=e.target.value;rende
 document.getElementById("orderForm").addEventListener("input",()=>{document.getElementById("formErr").textContent="";refreshSend()});
 document.getElementById("orderForm").addEventListener("submit",e=>e.preventDefault());
 
-document.getElementById("fGov").innerHTML='<option value="">اختر…</option>'+GOVS.map(g=>`<option>${g}</option>`).join("");
-const hello=waLink("مرحبا OBDTech، عندي سؤال عن جهاز يناسب سيارتي.\n(المصدر: "+SOURCE.label+")");
-document.getElementById("waTop").href=hello;
-document.getElementById("waHero").href=hello;
-document.getElementById("waFaq").href=hello;
 
-document.getElementById("tiles").innerHTML=CATS.filter(c=>c.id!=="all").map((c,i)=>{
-  const n=P.filter(p=>p.cat===c.id).length;
-  return `<button class="tile" type="button" data-tile="${c.id}" style="--i:${i}">${GLYPH[c.id]}<b>${c.name}</b><small>${n} جهاز</small><span class="arr" aria-hidden="true">←</span></button>`;
-}).join("");
+
+
 document.getElementById("tiles").addEventListener("click",e=>{
   const t=e.target.closest("[data-tile]");if(!t)return;
   cat=t.dataset.tile;renderChips();renderGrid(true);track("ViewContent",{content_category:cat});
   document.getElementById("catalog").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
 });
-renderChips();renderCart();
+
+function renderTiles(){
+  const arr=LANG==="en"?"→":"←";
+  document.getElementById("tiles").innerHTML=CATS.filter(c=>c.id!=="all").map((c,i)=>{
+    const n=P.filter(p=>p.cat===c.id).length;
+    return `<button class="tile" type="button" data-tile="${c.id}" style="--i:${i}">${GLYPH[c.id]}<b>${L("cat_"+c.id)}</b><small>${L("tile_unit",{n})}</small><span class="arr" aria-hidden="true">${arr}</span></button>`;
+  }).join("");
+}
+function applyLang(l){
+  if(l)LANG=l;
+  const root=document.documentElement;
+  root.lang=LANG;root.dir=LANG==="en"?"ltr":"rtl";
+  try{localStorage.setItem("obd_lang",LANG)}catch(e){}
+  document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=L(el.dataset.i)});
+  document.querySelectorAll("[data-ih]").forEach(el=>{el.innerHTML=L(el.dataset.ih)});
+  document.querySelectorAll("[data-iph]").forEach(el=>{el.placeholder=L(el.dataset.iph)});
+  document.querySelectorAll("[data-ia]").forEach(el=>{el.setAttribute("aria-label",L(el.dataset.ia))});
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===LANG)));
+  document.getElementById("faqList").innerHTML=L("faq").map(([q,a])=>`<details><summary>${q}</summary><p>${a}</p></details>`).join("");
+  const g=document.getElementById("fGov"),cur=g.value;
+  g.innerHTML=`<option value="">${L("choose")}</option>`+T.ar.govs.map((v,i)=>`<option value="${v}">${L("govs")[i]}</option>`).join("");
+  g.value=cur;
+  const hello=waLink(L("hello")+"\n(المصدر: "+SOURCE.label+")");
+  ["waTop","waHero","waFaq"].forEach(id=>document.getElementById(id).href=hello);
+  renderTiles();renderChips();renderCart();
+  const e=document.getElementById("formErr");if(e.textContent)e.textContent=validate();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(b&&b.dataset.lang!==LANG)applyLang(b.dataset.lang)});
+applyLang();
 
 })();
 </script>
