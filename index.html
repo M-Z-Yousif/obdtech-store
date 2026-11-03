@@ -459,7 +459,7 @@ fbq('init','816372657655264');fbq('track','PageView');
         <label for="fArea"><span data-i="f_area">المنطقة / أقرب نقطة دالة</span><input id="fArea" name="area" required></label>
       </div>
       <label for="fNote"><span data-i="f_note">ملاحظات (نوع السيارة، الموديل…)</span><textarea id="fNote" name="note" rows="2"></textarea></label>
-      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);opacity:0;pointer-events:none">
       <p class="err" id="formErr" role="alert"></p>
       <a class="btn btn-amber send" id="sendBtn" href="#" data-i="send">أرسل الطلب عبر واتساب</a>
       <p class="note" data-i="send_note">يفتح واتساب برسالة جاهزة فيها تفاصيل طلبك. اضغط إرسال داخل واتساب لإتمام الطلب.</p>
@@ -585,8 +585,8 @@ function renderChips(){
 
 function card(p){
   const inCart=cart[p.id];
-  const src=p.img||`images/${p.id}.jpg`;
-  const img=`<img src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`;
+  const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:"");
+  const img=!src?"":`<img src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`;
   const url=SHARE_BASE+"?src=share#p-"+p.id;
   const msg=L("share_msg",{name:p.brand+" "+p.model,price:fmt(p.price)});
   return `<article class="card" id="p-${p.id}">
@@ -661,13 +661,14 @@ function orderText(){
   const t=totals();
   const lines=Object.entries(cart).map(([id,qty])=>{const p=byId[id],u=unitPrice(p,qty);return `• ${p.brand} ${p.model} × ${qty} = ${fmt(u*qty)} د.ع`});
   return [`طلب جديد من موقع OBDTech (${ORDER_ID})`,"",...lines,"",`المنتجات: ${fmt(t.sub)} د.ع`,`التوصيل: ${t.del?fmt(t.del)+" د.ع":"مجاني"}`,`المجموع: ${fmt(t.grand)} د.ع`,"",
-    `الاسم: ${f.name.value.trim()}`,`الهاتف: ${f.phone.value.trim()}`,`المحافظة: ${f.gov.value}`,`العنوان: ${f.area.value.trim()}`,
+    `الاسم: ${f.name.value.trim()}`,`الهاتف: ${normPhone(f.phone.value)}`,`المحافظة: ${f.gov.value}`,`العنوان: ${f.area.value.trim()}`,
     f.note.value.trim()?`ملاحظات: ${f.note.value.trim()}`:"","",`المصدر: ${SOURCE.label}`,LANG!=="ar"?`لغة الزبون: ${LANG==="en"?"English":"کوردی"}`:""].filter((l,i,a)=>!(l===""&&a[i-1]==="")).join("\n").trim();
 }
 
+function normPhone(v){return String(v||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[\s\-()]/g,"")}
 function validate(){
   const f=document.getElementById("orderForm");
-  const phone=f.phone.value.replace(/[\s\-]/g,"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  const phone=normPhone(f.phone.value);
   if(!totals().n) return L("e_empty");
   if(!f.name.value.trim()) return L("e_name");
   if(!/^(\+?964|0)?7\d{9}$/.test(phone)) return L("e_phone");
@@ -721,14 +722,19 @@ document.getElementById("tiles").addEventListener("click",e=>{
 });
 
 
+/* ---- product photos: add the id here when you put images/<id>.jpg in the repo, e.g. new Set(["usta","a681"]) ---- */
+const HAS_PHOTO = new Set([]);
+
 /* ---- order alerts: paste your Google Apps Script web app URL here (see google-apps-script/README.md) ---- */
 const ORDER_HOOK = "https://script.google.com/macros/s/AKfycbxmupIWSj9D2rT_57nxTb_tEhZkCrz40mVrlQR_cyOMebEox4XuDTlI1gMK-2QVq-DC/exec";
 let ORDER_ID = newOrderId(), ORDER_SENT = false;
 function newOrderId(){return "OB-"+Date.now().toString(36).slice(-5).toUpperCase()}
 function postOrder(){
   if(!ORDER_HOOK)return;
+  const sig=ORDER_ID+"|"+JSON.stringify(cart)+"|"+normPhone(document.getElementById("orderForm").phone.value);
+  if(sig===postOrder.last)return; postOrder.last=sig;
   const f=document.getElementById("orderForm"),t=totals();
-  const data={id:ORDER_ID,name:f.name.value.trim(),phone:f.phone.value.trim(),gov:f.gov.value,area:f.area.value.trim(),note:f.note.value.trim(),
+  const data={id:ORDER_ID,name:f.name.value.trim(),phone:normPhone(f.phone.value),gov:f.gov.value,area:f.area.value.trim(),note:f.note.value.trim(),
     website:f.website?f.website.value:"",
     items:Object.entries(cart).map(([id,qty])=>{const p=byId[id];return {id,name:p.brand+" "+p.model,qty,total:fmt(unitPrice(p,qty)*qty)}}),
     sub:t.sub,del:t.del,total:t.grand,totalText:fmt(t.grand)+" د.ع",source:SOURCE.label,lang:LANG,text:orderText()};
@@ -781,7 +787,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if
 
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-share]");if(!a)return;
-  track("Share",{content_ids:[a.dataset.share]});
+  try{if(window.fbq)fbq("trackCustom","ShareProduct",{content_ids:[a.dataset.share]})}catch(_){}
   if(navigator.share){e.preventDefault();navigator.share({title:"OBDTech",text:a.dataset.msg,url:a.dataset.url}).catch(()=>{})}
 });
 function openFromHash(){
