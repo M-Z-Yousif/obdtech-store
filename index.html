@@ -105,7 +105,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.25}
 .price small{font-family:var(--body);font-weight:500;font-size:14px;color:var(--muted);margin-inline-start:4px}
 
 /* catalogue */
-.cat{padding:28px 0 56px}
+.cat{padding:44px 0 64px}
 .cat-head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
 .cat-head h2{font-size:32px}
 .cat-head p{margin:4px 0 0;color:var(--muted)}
@@ -121,7 +121,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.25}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
 .plate{position:relative;height:128px;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;background:
-  linear-gradient(135deg,color-mix(in srgb,var(--bg) 70%,var(--panel)),var(--bg));border-bottom:1px solid var(--line)}
+  radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--amber) 8%,var(--panel)),var(--bg) 70%);border-bottom:1px solid var(--line)}
 .plate img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;background:#fff}
 .card.has-img .plate{height:210px}
 .card.has-img .glyph,.card.has-img .brand,.card.has-img .model{visibility:hidden}
@@ -132,10 +132,10 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.25}
 .plate .model{font:700 clamp(19px,2.2vw,23px)/1.15 var(--mono);direction:ltr;text-align:left;letter-spacing:-.02em}
 .badge{position:absolute;top:14px;inset-inline-end:14px;background:var(--amber);color:var(--amber-ink);font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
 .card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
-.card h3{font-family:var(--body);font-size:16px;font-weight:700;line-height:1.45}
+.card h3{font-family:var(--body);font-size:16.5px;font-weight:700;line-height:1.45}
 .card ul{margin:0;padding:0;list-style:none;font-size:14px;color:var(--muted);display:grid;gap:3px}
 .card li::before{content:"— ";color:var(--amber)}
-.card .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.card .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
 .card .price{font-size:18px}
 .add{border:0;background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 16px;font:600 14px var(--body);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .add:hover{background:var(--amber);color:var(--amber-ink)}
@@ -207,7 +207,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber)}
 .hero{position:relative;overflow:hidden;isolation:isolate}
 .hero::before{content:"";position:absolute;inset:-20% -10% auto auto;width:620px;height:620px;border-radius:50%;
   background:radial-gradient(closest-side,color-mix(in srgb,var(--brand) 26%,transparent),transparent);filter:blur(10px);z-index:-1;animation:drift 14s ease-in-out infinite alternate}
-.hero::after{content:"";position:absolute;inset:0;z-index:-2;opacity:.5;
+.hero::after{content:"";position:absolute;inset:0;z-index:-2;opacity:.35;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;
   -webkit-mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 70%)}
 @keyframes drift{to{transform:translate(-60px,40px) scale(1.1)}}
@@ -242,14 +242,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber)}
 .sweep{position:absolute;inset:0 auto 0 -40%;width:40%;background:linear-gradient(90deg,transparent,rgba(240,87,76,.12),transparent);animation:sweep 3.2s linear infinite;pointer-events:none}
 @keyframes sweep{to{left:120%}}
 
-/* brand strip */
-.brands{border-block:1px solid var(--line);background:var(--panel);overflow:hidden;padding:16px 0;direction:ltr;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.brands .track{display:flex;gap:44px;width:max-content;animation:marquee 38s linear infinite;font:700 18px var(--mono);letter-spacing:.06em;color:var(--muted)}
-.brands .track span{display:flex;align-items:center;gap:44px}
-.brands .track span::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber)}
-.brands:hover .track{animation-play-state:paused}
-@keyframes marquee{to{transform:translateX(-50%)}}
+/* brand strip (static) */
+.brands{border-block:1px solid var(--line);background:var(--panel);padding:18px 0}
+.brands .track{max-width:1180px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px 30px;
+  font:700 15px var(--mono);letter-spacing:.08em;color:var(--muted);direction:ltr}
+.brands .track span{transition:color .2s}
+.brands .track span:hover{color:var(--amber)}
 
 /* cards */
 .card{transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s}
@@ -343,7 +341,7 @@ fbq('init','816372657655264');fbq('track','PageView');
     </div>
   </section>
 
-  <div class="brands" aria-label="الشركات المتوفرة"><div class="track"><span>XTOOL</span><span>LAUNCH</span><span>AUTOOL</span><span>FNIRSI</span><span>ANENG</span><span>VGATE</span><span>TOPDON</span><span>MUCAR</span><span>EDIAG</span><span>CGSULIT</span><span>TOPDIAG</span><span>TACTRIX</span><span>TASI</span><span aria-hidden="true">XTOOL</span><span aria-hidden="true">LAUNCH</span><span aria-hidden="true">AUTOOL</span><span aria-hidden="true">FNIRSI</span><span aria-hidden="true">ANENG</span><span aria-hidden="true">VGATE</span><span aria-hidden="true">TOPDON</span><span aria-hidden="true">MUCAR</span><span aria-hidden="true">EDIAG</span><span aria-hidden="true">CGSULIT</span><span aria-hidden="true">TOPDIAG</span><span aria-hidden="true">TACTRIX</span><span aria-hidden="true">TASI</span></div></div>
+  <div class="brands" aria-label="الشركات المتوفرة"><div class="track"><span>XTOOL</span><span>LAUNCH</span><span>AUTOOL</span><span>FNIRSI</span><span>ANENG</span><span>VGATE</span><span>TOPDON</span><span>MUCAR</span><span>EDIAG</span><span>CGSULIT</span><span>TOPDIAG</span><span>TACTRIX</span><span>TASI</span></div></div>
 
   <section class="cat" id="catalog" aria-labelledby="catTitle">
     <div class="wrap">
