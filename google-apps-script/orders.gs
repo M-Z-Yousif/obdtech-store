@@ -7,6 +7,7 @@
  */
 
 const ALERT_EMAIL = "obdtech360@gmail.com";
+const SHEET_ID = "1cAOifkOgJfJ4fiC-Gy31rBU0ZtIVfZPro3REsStSA7Y"; // OBDTech Orders sheet
 const SHEET_NAME = "Orders";
 const HEADERS = ["Time", "Order ID", "Name", "Phone", "Governorate", "Area",
                  "Items", "Products (IQD)", "Delivery (IQD)", "Total (IQD)",
@@ -29,7 +30,7 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const book = SpreadsheetApp.getActiveSpreadsheet();
+    const book = SpreadsheetApp.openById(SHEET_ID);
     const sheet = book.getSheetByName(SHEET_NAME) || book.insertSheet(SHEET_NAME);
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(HEADERS);
