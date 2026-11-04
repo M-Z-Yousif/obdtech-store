@@ -21,6 +21,7 @@ function doPost(e) {
     return ContentService.createTextOutput("bad request");
   }
   if (d.type === "shipping") return json_(writeShipping_(d));
+  if (d.type === "shipping-config") return json_(shippingConfig_(d));
 
   // Basic checks against junk submissions.
   const phone = String(d.phone || "").replace(/[\s-]/g, "");
@@ -210,12 +211,70 @@ function writeShipping_(d) {
     trimSheet_(sh, 14);
     let archived = [];
     if (!d.sample) { try { archived = archiveOldTabs_(book); } catch (err) {} }
-    return { archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
+    let emailed = 0;
+    if (!d.sample && d.notify !== false) {
+      try { emailed = emailTeam_(sh, name, book.getUrl() + "#gid=" + sh.getSheetId()); } catch (err) {}
+    }
+    return { emailed: emailed, archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
              website: fresh.filter(o => o.thread === "web").length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------------- Nightly email to the shipping team ----------------
+ * Addresses live only in Script Properties (TEAM_EMAILS, comma separated),
+ * set with {type:"shipping-config", key, teamEmails:"a@x.com,b@y.com"}.
+ * ------------------------------------------------------------------ */
+function shippingConfig_(d) {
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty("SHIP_KEY") || d.key !== props.getProperty("SHIP_KEY")) return { ok: false, error: "key" };
+  if (typeof d.teamEmails === "string") {
+    const list = d.teamEmails.split(/[,;\s]+/).map(s => s.trim()).filter(s => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s));
+    props.setProperty("TEAM_EMAILS", list.join(","));
+  }
+  if (d.test) {
+    const book = shippingBook_();
+    const sh = book.getSheets().find(s => /^\d{4}-\d{2}-\d{2}$/.test(s.getName())) || book.getSheets()[0];
+    return { ok: true, emails: props.getProperty("TEAM_EMAILS") || "", sent: emailTeam_(sh, sh.getName(), book.getUrl() + "#gid=" + sh.getSheetId(), true) };
+  }
+  return { ok: true, emails: props.getProperty("TEAM_EMAILS") || "" };
+}
+
+function emailTeam_(sh, day, url, isTest) {
+  const to = PropertiesService.getScriptProperties().getProperty("TEAM_EMAILS");
+  if (!to) return 0;
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues() : [];
+  const orders = [];
+  rows.forEach(r => {
+    if (r[0] !== "" && r[0] != null) orders.push({ n: r[0], models: [r[2]], name: r[3], address: r[5], price: Number(r[6]) || 0, note: r[7] });
+    else if (orders.length && r[2]) orders[orders.length - 1].models.push(r[2]);
+  });
+  const total = orders.reduce((s, o) => s + o.price, 0);
+  const fmt = v => Utilities.formatString("%s", Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const warn = orders.filter(o => /ناقص|يرجى|صوتية|غير صحيح|تعديل|استبدال|مخفي/.test(String(o.note)));
+  const subject = (isTest ? "[تجربة] " : "") + "📦 طلبات الشحن " + day + " — " + orders.length + " طلب — " + fmt(total) + " د.ع";
+  const list = orders.map(o =>
+    "<tr><td style='padding:6px;border-bottom:1px solid #eee'>" + esc(o.n) + "</td>" +
+    "<td style='padding:6px;border-bottom:1px solid #eee'><b>" + esc(o.name) + "</b><br>" + esc(o.address) + "</td>" +
+    "<td style='padding:6px;border-bottom:1px solid #eee;direction:ltr;text-align:left'>" + o.models.map(esc).join("<br>") + "</td>" +
+    "<td style='padding:6px;border-bottom:1px solid #eee;white-space:nowrap'><b>" + fmt(o.price) + "</b></td></tr>").join("");
+  const html =
+    "<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;font-size:15px;color:#222'>" +
+    "<h2 style='margin:0 0 8px'>طلبات الشحن — " + esc(day) + "</h2>" +
+    "<p style='margin:0 0 12px'>عدد الطلبات: <b>" + orders.length + "</b> &nbsp;•&nbsp; المجموع: <b>" + fmt(total) + " د.ع</b></p>" +
+    (warn.length ? "<p style='background:#fff3cd;padding:8px;border-radius:6px;margin:0 0 12px'>⚠️ يحتاج تأكيد قبل الشحن: " +
+      warn.map(o => "<b>" + esc(o.name) + "</b> (" + esc(o.note) + ")").join("، ") + "</p>" : "") +
+    (orders.length ? "<table style='border-collapse:collapse;width:100%;margin-bottom:14px'>" +
+      "<tr style='background:#d32f2f;color:#fff'><th style='padding:6px'>#</th><th style='padding:6px'>الزبون والعنوان</th><th style='padding:6px'>الموديل</th><th style='padding:6px'>السعر</th></tr>" +
+      list + "</table>" : "<p>لا توجد طلبات جديدة اليوم.</p>") +
+    "<p><a href='" + esc(url) + "' style='background:#d32f2f;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>افتح شيت اليوم (الصور وأرقام الهواتف)</a></p>" +
+    "<p style='color:#777;font-size:12px'>بعد شحن كل طلب ضع علامة ✓ في عمود «تم الشحن».</p></div>";
+  const plain = "طلبات الشحن " + day + ": " + orders.length + " طلب — المجموع " + fmt(total) + " د.ع\n" + url;
+  MailApp.sendEmail({ to: to, subject: subject, body: plain, htmlBody: html, name: "OBDTech الشحن" });
+  return to.split(",").length;
 }
 
 /* ---------------- Keeping the shipping sheet small ----------------
