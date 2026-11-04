@@ -70,7 +70,7 @@ function testAlert() {
 /* ------------------------------------------------------------------ *
  * Daily shipping sheet: confirmed Messenger/Instagram orders ("تم الحجز").
  * Claude posts {type:"shipping", key, day, orders:[...]} every night.
- * Each order: {thread, confirmedAt, name, address, phone, model, image, price, note, link}
+ * Each order: {thread, confirmedAt, name, address, phone, model, image, price, note, link, items?:[{model,image}]}
  * A new tab is made per day; orders already sent on an earlier day are skipped.
  * ------------------------------------------------------------------ */
 const SHIP_HEADERS = ["#", "صورة الموديل", "الموديل", "الاسم", "رقم الهاتف", "العنوان",
@@ -153,30 +153,49 @@ function writeShipping_(d) {
       sh.getRange(1, 1, 1, SHIP_HEADERS.length).setFontWeight("bold").setBackground("#d32f2f").setFontColor("#ffffff");
       [35, 130, 170, 150, 120, 240, 120, 230, 120, 110, 80].forEach((w, i) => sh.setColumnWidth(i + 1, w));
     }
-    let n = Math.max(0, sh.getLastRow() - 1);
+    // Order number = highest "#" so far (multi-item orders use several rows).
+    let n = sh.getLastRow() > 1
+      ? Math.max(0, ...sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(r => Number(r[0]) || 0)) : 0;
     let total = 0;
+    const putImage = (row, url, alt) => {
+      if (!url) return;
+      try {
+        const blob = UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getBlob();
+        const img = SpreadsheetApp.newCellImage()
+          .setSourceUrl("data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes()))
+          .setAltTextTitle(alt || "").build();
+        sh.getRange(row, 2).setValue(img);
+      } catch (err) {
+        sh.getRange(row, 2).setFormula('=IMAGE("' + String(url).replace(/"/g, "") + '")');
+      }
+    };
     fresh.forEach(o => {
       n++;
       const price = Number(o.price) || "";
       if (price) total += price;
-      sh.appendRow([n, "", o.model || "", o.name || "", o.phone ? "'" + o.phone : "",
-                    o.address || "", price, o.note || "", o.confirmedAt || "", "", false]);
-      const row = sh.getLastRow();
-      if (o.link) sh.getRange(row, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
-      sh.setRowHeight(row, 120);
-      sh.getRange(row, 11).insertCheckboxes();
-      if (/ناقص|يرجى|صوتية|غير صحيح/.test(String(o.note || ""))) sh.getRange(row, 8).setBackground("#fff3cd").setFontWeight("bold");
-      if (o.image) {
-        try {
-          const blob = UrlFetchApp.fetch(o.image, { muteHttpExceptions: true }).getBlob();
-          const img = SpreadsheetApp.newCellImage()
-            .setSourceUrl("data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes()))
-            .setAltTextTitle(o.model || "").build();
-          sh.getRange(row, 2).setValue(img);
-        } catch (err) {
-          sh.getRange(row, 2).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
-        }
+      // items: [{model, image}] -> one photo row per product; otherwise one row.
+      const items = (Array.isArray(o.items) && o.items.length)
+        ? o.items : [{ model: o.model || "", image: o.image || "" }];
+      const first = sh.getLastRow() + 1;
+      items.forEach((it, i) => {
+        sh.appendRow(i === 0
+          ? [n, "", it.model || "", o.name || "", o.phone ? "'" + o.phone : "",
+             o.address || "", price, o.note || "", o.confirmedAt || "", "", false]
+          : ["", "", it.model || "", "", "", "", "", "", "", "", ""]);
+        const row = sh.getLastRow();
+        sh.setRowHeight(row, 120);
+        putImage(row, it.image, it.model);
+      });
+      const rows = items.length;
+      if (rows > 1) {
+        [1, 4, 5, 6, 7, 8, 9, 10, 11].forEach(c => sh.getRange(first, c, rows, 1).merge());
+        sh.getRange(first, 2, rows, 2).setBorder(null, null, null, null, null, true, "#cccccc", SpreadsheetApp.BorderStyle.DOTTED);
       }
+      if (o.link) sh.getRange(first, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
+      sh.getRange(first, 11).insertCheckboxes();
+      if (/ناقص|يرجى|صوتية|غير صحيح/.test(String(o.note || ""))) sh.getRange(first, 8).setBackground("#fff3cd").setFontWeight("bold");
+      sh.getRange(first + rows - 1, 1, 1, SHIP_HEADERS.length)
+        .setBorder(null, null, true, null, null, null, "#999999", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
       if (!d.sample) sent.appendRow([o.key || (String(o.thread) + "|" + String(o.confirmedAt || "")), name]);
     });
     sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
@@ -187,7 +206,7 @@ function writeShipping_(d) {
     sh.getRange("M1").setValue("المجموع (د.ع)").setFontWeight("bold");
     sh.getRange("N1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
     sh.getRange("M2").setValue("عدد الطلبات").setFontWeight("bold");
-    sh.getRange("N2").setFormula("=COUNTA(D2:D)").setFontWeight("bold");
+    sh.getRange("N2").setFormula("=COUNT(A2:A)").setFontWeight("bold");
     return { ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
              website: fresh.filter(o => o.thread === "web").length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
