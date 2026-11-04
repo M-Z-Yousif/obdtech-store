@@ -213,7 +213,7 @@ function writeShipping_(d) {
     if (!d.sample) { try { archived = archiveOldTabs_(book); } catch (err) {} }
     let emailed = 0;
     if (!d.sample && d.notify !== false) {
-      try { emailed = emailTeam_(sh, name, book.getUrl() + "#gid=" + sh.getSheetId()); } catch (err) {}
+      try { emailed = notifyNightly_(sh, name, book.getUrl() + "#gid=" + sh.getSheetId()); } catch (err) {}
     }
     return { emailed: emailed, archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
              website: fresh.filter(o => o.thread === "web").length,
@@ -227,23 +227,68 @@ function writeShipping_(d) {
  * Addresses live only in Script Properties (TEAM_EMAILS, comma separated),
  * set with {type:"shipping-config", key, teamEmails:"a@x.com,b@y.com"}.
  * ------------------------------------------------------------------ */
+/* Review mode (default ON): the nightly email goes only to the owner
+ * (REVIEW_EMAIL, default ALERT_EMAIL) with a green "approve" button.
+ * One tap on it sends that day's email to the team. Turn review off with
+ * {type:"shipping-config", key, review:false} to email the team directly. */
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxmupIWSj9D2rT_57nxTb_tEhZkCrz40mVrlQR_cyOMebEox4XuDTlI1gMK-2QVq-DC/exec";
+const listEmails_ = s => String(s || "").split(/[,;\s]+/).map(x => x.trim()).filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));
+
 function shippingConfig_(d) {
   const props = PropertiesService.getScriptProperties();
   if (!props.getProperty("SHIP_KEY") || d.key !== props.getProperty("SHIP_KEY")) return { ok: false, error: "key" };
-  if (typeof d.teamEmails === "string") {
-    const list = d.teamEmails.split(/[,;\s]+/).map(s => s.trim()).filter(s => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s));
-    props.setProperty("TEAM_EMAILS", list.join(","));
-  }
+  if (typeof d.teamEmails === "string") props.setProperty("TEAM_EMAILS", listEmails_(d.teamEmails).join(","));
+  if (typeof d.reviewEmail === "string") props.setProperty("REVIEW_EMAIL", listEmails_(d.reviewEmail).join(","));
+  if (typeof d.review === "boolean") props.setProperty("REVIEW_MODE", d.review ? "on" : "off");
+  const state = { ok: true, team: props.getProperty("TEAM_EMAILS") || "", reviewEmail: reviewEmail_(),
+                  review: reviewOn_() };
   if (d.test) {
     const book = shippingBook_();
     const sh = book.getSheets().find(s => /^\d{4}-\d{2}-\d{2}$/.test(s.getName())) || book.getSheets()[0];
-    return { ok: true, emails: props.getProperty("TEAM_EMAILS") || "", sent: emailTeam_(sh, sh.getName(), book.getUrl() + "#gid=" + sh.getSheetId(), true) };
+    state.sent = notifyNightly_(sh, sh.getName(), book.getUrl() + "#gid=" + sh.getSheetId(), true);
   }
-  return { ok: true, emails: props.getProperty("TEAM_EMAILS") || "" };
+  return state;
 }
 
-function emailTeam_(sh, day, url, isTest) {
-  const to = PropertiesService.getScriptProperties().getProperty("TEAM_EMAILS");
+function reviewOn_() { return PropertiesService.getScriptProperties().getProperty("REVIEW_MODE") !== "off"; }
+function reviewEmail_() { return PropertiesService.getScriptProperties().getProperty("REVIEW_EMAIL") || ALERT_EMAIL; }
+
+function approveSig_(day) {
+  const key = PropertiesService.getScriptProperties().getProperty("SHIP_KEY") || "";
+  return Utilities.computeHmacSha256Signature("approve|" + day, key)
+    .map(b => ("0" + (b & 255).toString(16)).slice(-2)).join("").slice(0, 24);
+}
+
+function notifyNightly_(sh, day, url, isTest) {
+  const team = PropertiesService.getScriptProperties().getProperty("TEAM_EMAILS") || "";
+  if (!reviewOn_()) return team ? emailTeam_(sh, day, url, team, isTest ? "[تجربة] " : "") : 0;
+  const approve = WEBAPP_URL + "?approve=" + encodeURIComponent(day) + "&sig=" + approveSig_(day);
+  return emailTeam_(sh, day, url, reviewEmail_(), "[للمراجعة] " + (isTest ? "[تجربة] " : ""), team ? approve : "");
+}
+
+/** Owner taps the green button in the review email -> the team gets that day's email (once). */
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  const page = (msg, ok) => HtmlService.createHtmlOutput(
+    "<div dir='rtl' style='font-family:Tahoma,Arial;font-size:22px;padding:40px;text-align:center;color:" +
+    (ok ? "#1b5e20" : "#b71c1c") + "'>" + msg + "</div>").setTitle("OBDTech الشحن")
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+  if (!p.approve) return page("OBDTech", true);
+  const day = String(p.approve);
+  if (p.sig !== approveSig_(day)) return page("الرابط غير صحيح", false);
+  const props = PropertiesService.getScriptProperties();
+  const team = props.getProperty("TEAM_EMAILS");
+  if (!team) return page("لا توجد ايميلات للفريق بعد", false);
+  if (props.getProperty("APPROVED_" + day)) return page("✓ تم الإرسال للفريق مسبقاً (" + day + ")", true);
+  const book = shippingBook_();
+  const sh = book.getSheetByName(day);
+  if (!sh) return page("ورقة " + day + " غير موجودة", false);
+  emailTeam_(sh, day, book.getUrl() + "#gid=" + sh.getSheetId(), team, "");
+  props.setProperty("APPROVED_" + day, new Date().toISOString());
+  return page("✓ تم إرسال طلبات " + day + " للفريق", true);
+}
+
+function emailTeam_(sh, day, url, to, prefix, approveUrl) {
   if (!to) return 0;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues() : [];
@@ -255,14 +300,20 @@ function emailTeam_(sh, day, url, isTest) {
   const total = orders.reduce((s, o) => s + o.price, 0);
   const fmt = v => Utilities.formatString("%s", Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const warn = orders.filter(o => /ناقص|يرجى|صوتية|غير صحيح|تعديل|استبدال|مخفي/.test(String(o.note)));
-  const subject = (isTest ? "[تجربة] " : "") + "📦 طلبات الشحن " + day + " — " + orders.length + " طلب — " + fmt(total) + " د.ع";
+  const subject = (prefix || "") + "📦 طلبات الشحن " + day + " — " + orders.length + " طلب — " + fmt(total) + " د.ع";
   const list = orders.map(o =>
     "<tr><td style='padding:6px;border-bottom:1px solid #eee'>" + esc(o.n) + "</td>" +
     "<td style='padding:6px;border-bottom:1px solid #eee'><b>" + esc(o.name) + "</b><br>" + esc(o.address) + "</td>" +
     "<td style='padding:6px;border-bottom:1px solid #eee;direction:ltr;text-align:left'>" + o.models.map(esc).join("<br>") + "</td>" +
     "<td style='padding:6px;border-bottom:1px solid #eee;white-space:nowrap'><b>" + fmt(o.price) + "</b></td></tr>").join("");
+  const approveBox = approveUrl
+    ? "<div style='background:#e8f5e9;border:1px solid #a5d6a7;padding:12px;border-radius:8px;margin:0 0 14px'>" +
+      "<b>للمراجعة:</b> افتح الشيت وتأكد من الطلبات، بعدها اضغط الزر الأخضر حتى يوصل هذا الايميل لفريق الشحن." +
+      "<p style='margin:10px 0 0'><a href='" + esc(approveUrl) + "' style='background:#2e7d32;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>✅ موافق — ارسل للفريق</a></p></div>"
+    : (prefix && prefix.indexOf("للمراجعة") >= 0
+      ? "<p style='background:#eee;padding:8px;border-radius:6px'>للمراجعة فقط — لم تُضف ايميلات الفريق بعد.</p>" : "");
   const html =
-    "<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;font-size:15px;color:#222'>" +
+    "<div dir='rtl' style='font-family:Tahoma,Arial,sans-serif;font-size:15px;color:#222'>" + approveBox +
     "<h2 style='margin:0 0 8px'>طلبات الشحن — " + esc(day) + "</h2>" +
     "<p style='margin:0 0 12px'>عدد الطلبات: <b>" + orders.length + "</b> &nbsp;•&nbsp; المجموع: <b>" + fmt(total) + " د.ع</b></p>" +
     (warn.length ? "<p style='background:#fff3cd;padding:8px;border-radius:6px;margin:0 0 12px'>⚠️ يحتاج تأكيد قبل الشحن: " +
