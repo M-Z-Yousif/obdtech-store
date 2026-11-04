@@ -73,8 +73,8 @@ function testAlert() {
  * Each order: {thread, confirmedAt, name, address, phone, model, image, price, note, link}
  * A new tab is made per day; orders already sent on an earlier day are skipped.
  * ------------------------------------------------------------------ */
-const SHIP_HEADERS = ["#", "الاسم", "العنوان", "رقم الهاتف", "الموديل", "صورة الموديل",
-                      "السعر مع التوصيل (د.ع)", "ملاحظات", "وقت التأكيد", "رابط المحادثة"];
+const SHIP_HEADERS = ["#", "صورة الموديل", "الموديل", "الاسم", "رقم الهاتف", "العنوان",
+                      "السعر مع التوصيل (د.ع)", "ملاحظات", "وقت التأكيد", "رابط المحادثة", "تم الشحن ✓"];
 
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
@@ -151,7 +151,7 @@ function writeShipping_(d) {
       sh.appendRow(SHIP_HEADERS);
       sh.setFrozenRows(1);
       sh.getRange(1, 1, 1, SHIP_HEADERS.length).setFontWeight("bold").setBackground("#d32f2f").setFontColor("#ffffff");
-      [40, 160, 260, 130, 180, 120, 150, 220, 140, 120].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+      [35, 130, 170, 150, 120, 240, 120, 230, 120, 110, 80].forEach((w, i) => sh.setColumnWidth(i + 1, w));
     }
     let n = Math.max(0, sh.getLastRow() - 1);
     let total = 0;
@@ -159,31 +159,35 @@ function writeShipping_(d) {
       n++;
       const price = Number(o.price) || "";
       if (price) total += price;
-      sh.appendRow([n, o.name || "", o.address || "", o.phone ? "'" + o.phone : "",
-                    o.model || "", "", price, o.note || "", o.confirmedAt || "", ""]);
+      sh.appendRow([n, "", o.model || "", o.name || "", o.phone ? "'" + o.phone : "",
+                    o.address || "", price, o.note || "", o.confirmedAt || "", "", false]);
       const row = sh.getLastRow();
       if (o.link) sh.getRange(row, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
-      sh.setRowHeight(row, 100);
+      sh.setRowHeight(row, 120);
+      sh.getRange(row, 11).insertCheckboxes();
+      if (/ناقص|يرجى|صوتية|غير صحيح/.test(String(o.note || ""))) sh.getRange(row, 8).setBackground("#fff3cd").setFontWeight("bold");
       if (o.image) {
         try {
           const blob = UrlFetchApp.fetch(o.image, { muteHttpExceptions: true }).getBlob();
           const img = SpreadsheetApp.newCellImage()
             .setSourceUrl("data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes()))
             .setAltTextTitle(o.model || "").build();
-          sh.getRange(row, 6).setValue(img);
+          sh.getRange(row, 2).setValue(img);
         } catch (err) {
-          sh.getRange(row, 6).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
+          sh.getRange(row, 2).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
         }
       }
       sent.appendRow([o.key || (String(o.thread) + "|" + String(o.confirmedAt || "")), name]);
     });
     sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
-      .setVerticalAlignment("middle").setWrap(true);
+      .setVerticalAlignment("middle").setWrap(true).setFontSize(11);
+    sh.getRange("A2:A").setHorizontalAlignment("center");
+    sh.getRange("G2:G").setFontWeight("bold");
     sh.getRange("G2:G").setNumberFormat("#,##0");
-    sh.getRange("L1").setValue("المجموع (د.ع)").setFontWeight("bold");
-    sh.getRange("M1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
-    sh.getRange("L2").setValue("عدد الطلبات").setFontWeight("bold");
-    sh.getRange("M2").setFormula("=COUNTA(B2:B)").setFontWeight("bold");
+    sh.getRange("M1").setValue("المجموع (د.ع)").setFontWeight("bold");
+    sh.getRange("N1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
+    sh.getRange("M2").setValue("عدد الطلبات").setFontWeight("bold");
+    sh.getRange("N2").setFormula("=COUNTA(D2:D)").setFontWeight("bold");
     return { ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
              website: fresh.filter(o => o.thread === "web").length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
