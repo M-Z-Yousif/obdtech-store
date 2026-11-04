@@ -137,8 +137,9 @@ function writeShipping_(d) {
       const price = Number(o.price) || "";
       if (price) total += price;
       sh.appendRow([n, o.name || "", o.address || "", o.phone ? "'" + o.phone : "",
-                    o.model || "", "", price, o.note || "", o.confirmedAt || "", o.link || ""]);
+                    o.model || "", "", price, o.note || "", o.confirmedAt || "", ""]);
       const row = sh.getLastRow();
+      if (o.link) sh.getRange(row, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","فتح المحادثة")');
       sh.setRowHeight(row, 100);
       if (o.image) {
         try {
@@ -155,6 +156,11 @@ function writeShipping_(d) {
     });
     sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
       .setVerticalAlignment("middle").setWrap(true);
+    sh.getRange("G2:G").setNumberFormat("#,##0");
+    sh.getRange("L1").setValue("المجموع (د.ع)").setFontWeight("bold");
+    sh.getRange("M1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
+    sh.getRange("L2").setValue("عدد الطلبات").setFontWeight("bold");
+    sh.getRange("M2").setFormula("=COUNTA(B2:B)").setFontWeight("bold");
     return { ok: true, added: fresh.length, skipped: (d.orders || []).length - fresh.length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
   } finally {
