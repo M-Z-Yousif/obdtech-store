@@ -115,10 +115,33 @@ function writeShipping_(d) {
     const sent = book.getSheetByName("_sent");
     const seen = new Set(sent.getLastRow() > 1
       ? sent.getRange(2, 1, sent.getLastRow() - 1, 1).getValues().map(r => String(r[0])) : []);
+    const posted = (d.orders || []).length;
     const fresh = (d.orders || []).filter(o => {
       const k = String(o.thread) + "|" + String(o.confirmedAt || "");
       return o.thread && !seen.has(k);
     });
+
+    // Website orders from the last 26 hours that were not sent before.
+    try {
+      const web = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+      if (web && web.getLastRow() > 1) {
+        const since = Date.now() - 26 * 3600 * 1000;
+        web.getRange(2, 1, web.getLastRow() - 1, HEADERS.length).getValues().forEach(r => {
+          const t = r[0] instanceof Date ? r[0].getTime() : 0;
+          const id = String(r[1] || "");
+          if (!id || t < since || seen.has("web|" + id)) return;
+          fresh.push({
+            thread: "web", key: "web|" + id,
+            confirmedAt: Utilities.formatDate(r[0], "Asia/Seoul", "yyyy-MM-dd HH:mm"),
+            name: String(r[2] || ""), address: [r[4], r[5]].filter(String).join(" - "),
+            phone: String(r[3] || "").replace(/^'/, ""), model: String(r[6] || ""), image: "",
+            price: Number(r[9]) || "",
+            note: "طلب من الموقع " + id + " — تأكد عبر الواتساب قبل الشحن" + (r[12] ? " • " + r[12] : ""),
+            link: "https://wa.me/" + String(r[3] || "").replace(/^'/, "").replace(/^0/, "964")
+          });
+        });
+      }
+    } catch (err) {}
 
     const name = String(d.day || Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyy-MM-dd"));
     let sh = book.getSheetByName(name);
@@ -139,7 +162,7 @@ function writeShipping_(d) {
       sh.appendRow([n, o.name || "", o.address || "", o.phone ? "'" + o.phone : "",
                     o.model || "", "", price, o.note || "", o.confirmedAt || "", ""]);
       const row = sh.getLastRow();
-      if (o.link) sh.getRange(row, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","فتح المحادثة")');
+      if (o.link) sh.getRange(row, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
       sh.setRowHeight(row, 100);
       if (o.image) {
         try {
@@ -152,7 +175,7 @@ function writeShipping_(d) {
           sh.getRange(row, 6).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
         }
       }
-      sent.appendRow([String(o.thread) + "|" + String(o.confirmedAt || ""), name]);
+      sent.appendRow([o.key || (String(o.thread) + "|" + String(o.confirmedAt || "")), name]);
     });
     sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
       .setVerticalAlignment("middle").setWrap(true);
@@ -161,7 +184,8 @@ function writeShipping_(d) {
     sh.getRange("M1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
     sh.getRange("L2").setValue("عدد الطلبات").setFontWeight("bold");
     sh.getRange("M2").setFormula("=COUNTA(B2:B)").setFontWeight("bold");
-    return { ok: true, added: fresh.length, skipped: (d.orders || []).length - fresh.length,
+    return { ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
+             website: fresh.filter(o => o.thread === "web").length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
   } finally {
     lock.releaseLock();
