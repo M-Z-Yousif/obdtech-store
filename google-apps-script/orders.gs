@@ -245,7 +245,10 @@ function shippingConfig_(d) {
   if (typeof d.teamEmails === "string") props.setProperty("TEAM_EMAILS", listEmails_(d.teamEmails).join(","));
   if (typeof d.reviewEmail === "string") props.setProperty("REVIEW_EMAIL", listEmails_(d.reviewEmail).join(","));
   if (typeof d.review === "boolean") props.setProperty("REVIEW_MODE", d.review ? "on" : "off");
-  const state = { ok: true, team: props.getProperty("TEAM_EMAILS") || "", reviewEmail: reviewEmail_(),
+  if (typeof d.resetApproval === "string") props.deleteProperty("APPROVED_" + d.resetApproval);
+  let cleaned = null;
+  if (d.cleanup) cleaned = cleanupTests_();
+  const state = { ok: true, cleaned: cleaned, team: props.getProperty("TEAM_EMAILS") || "", reviewEmail: reviewEmail_(),
                   review: reviewOn_() };
   if (d.test) {
     const book = shippingBook_();
@@ -601,4 +604,30 @@ function lowStock_() {
   return inv.getRange(2, 1, inv.getLastRow() - 1, 3).getValues()
     .filter(r => r[0] && r[1] !== "" && Number(r[1]) <= Number(r[2] || 0))
     .map(r => ({ model: r[0], qty: r[1] }));
+}
+
+
+/** Removes test tabs ("نموذج…", anything with "تجربة") and their stock movements. Real date tabs stay. */
+function cleanupTests_() {
+  const book = shippingBook_();
+  const removed = [];
+  const testRefs = [];
+  book.getSheets().forEach(sh => {
+    const n = sh.getName();
+    if (/^نموذج/.test(n) || /تجربة/.test(n)) {
+      testRefs.push(n + "#", "2000-01-01#");
+      removed.push(n);
+      book.deleteSheet(sh);
+    }
+  });
+  const mv = book.getSheetByName(MOVES_TAB);
+  let rows = 0;
+  if (mv && mv.getLastRow() > 1) {
+    const vals = mv.getRange(2, 1, mv.getLastRow() - 1, 6).getValues();
+    for (let i = vals.length - 1; i >= 0; i--) {
+      const ref = String(vals[i][4] || "");
+      if (testRefs.some(t => ref.indexOf(t) === 0) || /^2000-01-01#/.test(ref)) { mv.deleteRow(i + 2); rows++; }
+    }
+  }
+  return { tabs: removed, stockRows: rows };
 }
