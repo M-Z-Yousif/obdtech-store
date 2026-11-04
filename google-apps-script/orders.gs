@@ -207,12 +207,88 @@ function writeShipping_(d) {
     sh.getRange("N1").setFormula("=SUM(G2:G)").setNumberFormat("#,##0").setFontWeight("bold");
     sh.getRange("M2").setValue("عدد الطلبات").setFontWeight("bold");
     sh.getRange("N2").setFormula("=COUNT(A2:A)").setFontWeight("bold");
-    return { ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
+    trimSheet_(sh, 14);
+    let archived = [];
+    if (!d.sample) { try { archived = archiveOldTabs_(book); } catch (err) {} }
+    return { archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
              website: fresh.filter(o => o.thread === "web").length,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------------- Keeping the shipping sheet small ----------------
+ * Google Sheets allows ~10 million cells per file. A new tab starts with
+ * 1000 rows x 26 columns, so each tab is trimmed to what it uses, and daily
+ * tabs older than KEEP_DAYS move to a monthly archive file
+ * ("OBDTech — أرشيف الشحن YYYY-MM") in the same Google Drive; its link is
+ * added to the "اقرأني" tab.
+ * ------------------------------------------------------------------ */
+const KEEP_DAYS = 30;
+
+function trimSheet_(sh, keepCols) {
+  const spareRows = 2;
+  const lastRow = Math.max(sh.getLastRow(), 2);
+  const maxRows = sh.getMaxRows();
+  if (maxRows > lastRow + spareRows) sh.deleteRows(lastRow + spareRows + 1, maxRows - lastRow - spareRows);
+  const cols = Math.max(keepCols || sh.getLastColumn(), 1);
+  const maxCols = sh.getMaxColumns();
+  if (maxCols > cols) sh.deleteColumns(cols + 1, maxCols - cols);
+}
+
+function archiveBook_(month, book) {
+  const props = PropertiesService.getScriptProperties();
+  const prop = "ARCHIVE_" + month;
+  let arch = null;
+  const id = props.getProperty(prop);
+  if (id) { try { arch = SpreadsheetApp.openById(id); } catch (e) {} }
+  if (!arch) {
+    arch = SpreadsheetApp.create("OBDTech — أرشيف الشحن " + month);
+    props.setProperty(prop, arch.getId());
+    props.setProperty(prop + "_BLANK", String(arch.getSheets()[0].getSheetId()));
+    // List the archive in the info tab.
+    const info = book.getSheetByName("اقرأني");
+    if (info) info.appendRow(["أرشيف " + month + ": " + arch.getUrl()]);
+  }
+  return arch;
+}
+
+function archiveOldTabs_(book) {
+  const today = new Date(Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd") + "T00:00:00Z");
+  const moved = [];
+  book.getSheets().forEach(sh => {
+    const name = sh.getName();
+    const m = name.match(/^(\d{4}-\d{2})-\d{2}$/);
+    if (!m) return;
+    const age = (today - new Date(name + "T00:00:00Z")) / 86400000;
+    if (!(age > KEEP_DAYS)) return;
+    const arch = archiveBook_(m[1], book);
+    if (arch.getSheetByName(name)) { book.deleteSheet(sh); moved.push(name); return; }
+    const copy = sh.copyTo(arch).setName(name);
+    copy.setRightToLeft(true);
+    // Remove the empty default tab of a new archive file.
+    const props = PropertiesService.getScriptProperties();
+    const blankId = props.getProperty("ARCHIVE_" + m[1] + "_BLANK");
+    if (blankId) {
+      const blank = arch.getSheets().find(s => String(s.getSheetId()) === blankId);
+      if (blank && arch.getSheets().length > 1) arch.deleteSheet(blank);
+      props.deleteProperty("ARCHIVE_" + m[1] + "_BLANK");
+    }
+    book.deleteSheet(sh);
+    moved.push(name);
+  });
+  return moved;
+}
+
+/** Run once from the editor: trims every existing tab (also the hidden "_sent" list). */
+function trimAllTabs() {
+  const book = shippingBook_();
+  book.getSheets().forEach(sh => {
+    const n = sh.getName();
+    trimSheet_(sh, n === "_sent" ? 2 : (n === "اقرأني" ? 1 : 14));
+  });
+  Logger.log("trimmed " + book.getSheets().length + " tabs");
 }
 
 /** Run once from the editor: creates the shipping sheet and logs its link.
