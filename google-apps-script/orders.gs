@@ -118,11 +118,11 @@ function writeShipping_(d) {
     const posted = (d.orders || []).length;
     const fresh = (d.orders || []).filter(o => {
       const k = String(o.thread) + "|" + String(o.confirmedAt || "");
-      return o.thread && !seen.has(k);
+      return o.thread && (d.sample || !seen.has(k));
     });
 
-    // Website orders from the last 26 hours that were not sent before.
-    try {
+    // Website orders from the last 26 hours that were not sent before (not for sample tabs).
+    if (!d.sample) try {
       const web = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
       if (web && web.getLastRow() > 1) {
         const since = Date.now() - 26 * 3600 * 1000;
@@ -177,7 +177,7 @@ function writeShipping_(d) {
           sh.getRange(row, 2).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
         }
       }
-      sent.appendRow([o.key || (String(o.thread) + "|" + String(o.confirmedAt || "")), name]);
+      if (!d.sample) sent.appendRow([o.key || (String(o.thread) + "|" + String(o.confirmedAt || "")), name]);
     });
     sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
       .setVerticalAlignment("middle").setWrap(true).setFontSize(11);
