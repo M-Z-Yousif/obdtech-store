@@ -161,13 +161,18 @@ function writeShipping_(d) {
     const putImage = (row, url, alt) => {
       if (!url) return;
       try {
-        const blob = UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getBlob();
+        const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+        const blob = res.getBlob();
+        if (res.getResponseCode() !== 200 || !/^image\//.test(String(blob.getContentType()))) {
+          sh.getRange(row, 2).setValue("لا توجد صورة").setFontColor("#999999");
+          return;
+        }
         const img = SpreadsheetApp.newCellImage()
           .setSourceUrl("data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes()))
           .setAltTextTitle(alt || "").build();
         sh.getRange(row, 2).setValue(img);
       } catch (err) {
-        sh.getRange(row, 2).setFormula('=IMAGE("' + String(url).replace(/"/g, "") + '")');
+        sh.getRange(row, 2).setValue("لا توجد صورة").setFontColor("#999999");
       }
     };
     fresh.forEach(o => {
