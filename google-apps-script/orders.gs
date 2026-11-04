@@ -83,13 +83,25 @@ function json_(o) {
 function shippingBook_() {
   const props = PropertiesService.getScriptProperties();
   let id = props.getProperty("SHIP_SHEET_ID");
-  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
-  const book = SpreadsheetApp.create("OBDTech — طلبات الشحن اليومية");
-  props.setProperty("SHIP_SHEET_ID", book.getId());
-  const done = book.getSheets()[0];
-  done.setName("_sent");
-  done.appendRow(["key", "day"]);
-  done.hideSheet();
+  let book = null;
+  if (id) { try { book = SpreadsheetApp.openById(id); } catch (e) {} }
+  if (!book) {
+    book = SpreadsheetApp.create("OBDTech — طلبات الشحن اليومية");
+    props.setProperty("SHIP_SHEET_ID", book.getId());
+    book.getSheets()[0].setName("_sent").appendRow(["key", "day"]);
+  }
+  if (!book.getSheetByName("_sent")) book.insertSheet("_sent").appendRow(["key", "day"]);
+  if (!book.getSheetByName("اقرأني")) {
+    const info = book.insertSheet("اقرأني");
+    info.setRightToLeft(true);
+    info.getRange("A1:A3").setValues([["طلبات الشحن اليومية — OBDTech"],
+      ["كل ليلة تُضاف ورقة جديدة باسم التاريخ فيها الطلبات المؤكدة (تم الحجز) من ماسنجر وانستغرام."],
+      ["الطلب لا يتكرر في يومين مختلفين."]]);
+    info.getRange("A1").setFontWeight("bold").setFontSize(14);
+    info.setColumnWidth(1, 600);
+  }
+  const done = book.getSheetByName("_sent");
+  if (!done.isSheetHidden()) done.hideSheet();
   return book;
 }
 
