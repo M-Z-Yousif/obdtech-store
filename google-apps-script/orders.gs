@@ -20,6 +20,7 @@ function doPost(e) {
   } catch (err) {
     return ContentService.createTextOutput("bad request");
   }
+  if (d.type === "shipping") return json_(writeShipping_(d));
 
   // Basic checks against junk submissions.
   const phone = String(d.phone || "").replace(/[\s-]/g, "");
@@ -64,4 +65,96 @@ function testAlert() {
     totalText: "35,000 د.ع", source: "test", lang: "ar", note: "",
     text: "طلب تجريبي من موقع OBDTech"
   }) } });
+}
+
+/* ------------------------------------------------------------------ *
+ * Daily shipping sheet: confirmed Messenger/Instagram orders ("تم الحجز").
+ * Claude posts {type:"shipping", key, day, orders:[...]} every night.
+ * Each order: {thread, confirmedAt, name, address, phone, model, image, price, note, link}
+ * A new tab is made per day; orders already sent on an earlier day are skipped.
+ * ------------------------------------------------------------------ */
+const SHIP_HEADERS = ["#", "الاسم", "العنوان", "رقم الهاتف", "الموديل", "صورة الموديل",
+                      "السعر مع التوصيل (د.ع)", "ملاحظات", "وقت التأكيد", "رابط المحادثة"];
+
+function json_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function shippingBook_() {
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty("SHIP_SHEET_ID");
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  const book = SpreadsheetApp.create("OBDTech — طلبات الشحن اليومية");
+  props.setProperty("SHIP_SHEET_ID", book.getId());
+  const done = book.getSheets()[0];
+  done.setName("_sent");
+  done.appendRow(["key", "day"]);
+  done.hideSheet();
+  return book;
+}
+
+function writeShipping_(d) {
+  const shipKey = PropertiesService.getScriptProperties().getProperty("SHIP_KEY");
+  if (!shipKey || d.key !== shipKey) return { ok: false, error: "key" };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const book = shippingBook_();
+    const sent = book.getSheetByName("_sent");
+    const seen = new Set(sent.getLastRow() > 1
+      ? sent.getRange(2, 1, sent.getLastRow() - 1, 1).getValues().map(r => String(r[0])) : []);
+    const fresh = (d.orders || []).filter(o => {
+      const k = String(o.thread) + "|" + String(o.confirmedAt || "");
+      return o.thread && !seen.has(k);
+    });
+
+    const name = String(d.day || Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyy-MM-dd"));
+    let sh = book.getSheetByName(name);
+    if (!sh) {
+      sh = book.insertSheet(name, 0);
+      sh.setRightToLeft(true);
+      sh.appendRow(SHIP_HEADERS);
+      sh.setFrozenRows(1);
+      sh.getRange(1, 1, 1, SHIP_HEADERS.length).setFontWeight("bold").setBackground("#d32f2f").setFontColor("#ffffff");
+      [40, 160, 260, 130, 180, 120, 150, 220, 140, 120].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+    }
+    let n = Math.max(0, sh.getLastRow() - 1);
+    let total = 0;
+    fresh.forEach(o => {
+      n++;
+      const price = Number(o.price) || "";
+      if (price) total += price;
+      sh.appendRow([n, o.name || "", o.address || "", o.phone ? "'" + o.phone : "",
+                    o.model || "", "", price, o.note || "", o.confirmedAt || "", o.link || ""]);
+      const row = sh.getLastRow();
+      sh.setRowHeight(row, 100);
+      if (o.image) {
+        try {
+          const blob = UrlFetchApp.fetch(o.image, { muteHttpExceptions: true }).getBlob();
+          const img = SpreadsheetApp.newCellImage()
+            .setSourceUrl("data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes()))
+            .setAltTextTitle(o.model || "").build();
+          sh.getRange(row, 6).setValue(img);
+        } catch (err) {
+          sh.getRange(row, 6).setFormula('=IMAGE("' + String(o.image).replace(/"/g, "") + '")');
+        }
+      }
+      sent.appendRow([String(o.thread) + "|" + String(o.confirmedAt || ""), name]);
+    });
+    sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), SHIP_HEADERS.length)
+      .setVerticalAlignment("middle").setWrap(true);
+    return { ok: true, added: fresh.length, skipped: (d.orders || []).length - fresh.length,
+             total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Run once from the editor: creates the shipping sheet and logs its link.
+ *  The secret key lives only in Script Properties (SHIP_KEY), never in this repository. */
+const SETUP_SHIP_KEY = ""; // paste the key here in the editor only, run setupShipping once, then clear it
+function setupShipping() {
+  if (SETUP_SHIP_KEY) PropertiesService.getScriptProperties().setProperty("SHIP_KEY", SETUP_SHIP_KEY);
+  const book = shippingBook_();
+  Logger.log(book.getUrl());
 }
