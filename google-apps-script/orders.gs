@@ -75,7 +75,7 @@ function testAlert() {
  * A new tab is made per day; orders already sent on an earlier day are skipped.
  * ------------------------------------------------------------------ */
 const SHIP_HEADERS = ["#", "صورة الموديل", "الموديل", "الاسم", "رقم الهاتف", "العنوان",
-                      "السعر مع التوصيل (د.ع)", "ملاحظات", "وقت التأكيد", "رابط المحادثة", "تم الشحن ✓"];
+                      "السعر مع التوصيل (د.ع)", "ملاحظات", "وقت التأكيد", "رابط المحادثة", "الحالة"];
 
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
@@ -152,7 +152,7 @@ function writeShipping_(d) {
       sh.appendRow(SHIP_HEADERS);
       sh.setFrozenRows(1);
       sh.getRange(1, 1, 1, SHIP_HEADERS.length).setFontWeight("bold").setBackground("#d32f2f").setFontColor("#ffffff");
-      [35, 130, 170, 150, 120, 240, 120, 230, 120, 110, 80].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+      [35, 130, 170, 150, 120, 240, 120, 230, 120, 110, 130].forEach((w, i) => sh.setColumnWidth(i + 1, w));
     }
     // Order number = highest "#" so far (multi-item orders use several rows).
     let n = sh.getLastRow() > 1
@@ -181,7 +181,7 @@ function writeShipping_(d) {
       items.forEach((it, i) => {
         sh.appendRow(i === 0
           ? [n, "", it.model || "", o.name || "", o.phone ? "'" + o.phone : "",
-             o.address || "", price, o.note || "", o.confirmedAt || "", "", false]
+             o.address || "", price, o.note || "", o.confirmedAt || "", "", STATUS.wait]
           : ["", "", it.model || "", "", "", "", "", "", "", "", ""]);
         const row = sh.getLastRow();
         sh.setRowHeight(row, 120);
@@ -193,7 +193,7 @@ function writeShipping_(d) {
         sh.getRange(first, 2, rows, 2).setBorder(null, null, null, null, null, true, "#cccccc", SpreadsheetApp.BorderStyle.DOTTED);
       }
       if (o.link) sh.getRange(first, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
-      sh.getRange(first, 11).insertCheckboxes();
+      sh.getRange(first, 11).setDataValidation(statusRule_());
       if (/ناقص|يرجى|صوتية|غير صحيح/.test(String(o.note || ""))) sh.getRange(first, 8).setBackground("#fff3cd").setFontWeight("bold");
       sh.getRange(first + rows - 1, 1, 1, SHIP_HEADERS.length)
         .setBorder(null, null, true, null, null, null, "#999999", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
@@ -300,6 +300,8 @@ function emailTeam_(sh, day, url, to, prefix, approveUrl) {
   const total = orders.reduce((s, o) => s + o.price, 0);
   const fmt = v => Utilities.formatString("%s", Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const warn = orders.filter(o => /ناقص|يرجى|صوتية|غير صحيح|تعديل|استبدال|مخفي/.test(String(o.note)));
+  let low = [];
+  try { low = lowStock_(); } catch (err) {}
   const subject = (prefix || "") + "📦 طلبات الشحن " + day + " — " + orders.length + " طلب — " + fmt(total) + " د.ع";
   const list = orders.map(o =>
     "<tr><td style='padding:6px;border-bottom:1px solid #eee'>" + esc(o.n) + "</td>" +
@@ -322,7 +324,9 @@ function emailTeam_(sh, day, url, to, prefix, approveUrl) {
       "<tr style='background:#d32f2f;color:#fff'><th style='padding:6px'>#</th><th style='padding:6px'>الزبون والعنوان</th><th style='padding:6px'>الموديل</th><th style='padding:6px'>السعر</th></tr>" +
       list + "</table>" : "<p>لا توجد طلبات جديدة اليوم.</p>") +
     "<p><a href='" + esc(url) + "' style='background:#d32f2f;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>افتح شيت اليوم (الصور وأرقام الهواتف)</a></p>" +
-    "<p style='color:#777;font-size:12px'>بعد شحن كل طلب ضع علامة ✓ في عمود «تم الشحن».</p></div>";
+    (low.length ? "<p style='background:#fdecea;padding:8px;border-radius:6px'>📉 مخزون قليل: " +
+      low.map(x => "<b>" + esc(x.model) + "</b> (" + x.qty + ")").join("، ") + "</p>" : "") +
+    "<p style='color:#777;font-size:12px'>بعد شحن كل طلب غيّر «الحالة» الى ✅ تم الشحن — والمخزون ينقص تلقائياً. الراجع: ↩️ راجع.</p></div>";
   const plain = "طلبات الشحن " + day + ": " + orders.length + " طلب — المجموع " + fmt(total) + " د.ع\n" + url;
   MailApp.sendEmail({ to: to, subject: subject, body: plain, htmlBody: html, name: "OBDTech الشحن" });
   return to.split(",").length;
@@ -408,4 +412,188 @@ function setupShipping() {
   if (SETUP_SHIP_KEY) PropertiesService.getScriptProperties().setProperty("SHIP_KEY", SETUP_SHIP_KEY);
   const book = shippingBook_();
   Logger.log(book.getUrl());
+}
+
+
+/* ======================= Stock (المخزون) =======================
+ * Tab "المخزون": one row per product. Current = opening + received + movements.
+ * Tab "استلام بضاعة": team adds received stock (date, model, qty).
+ * Hidden tab "_حركات": every stock change made by the "الحالة" column in a daily tab.
+ *   Status effect per unit: بانتظار/ملغي/راجع = 0, تم الشحن = -1. A change writes only the
+ *   difference, so shipped -> returned gives +qty back and repeated edits never double count.
+ * The daily tab's model text "SGW Bypass Cable × 5" means quantity 5.
+ * ============================================================== */
+const STATUS = { wait: "⏳ بانتظار الشحن", shipped: "✅ تم الشحن", returned: "↩️ راجع", cancelled: "❌ ملغي" };
+const STOCK_TAB = "المخزون", RECV_TAB = "استلام بضاعة", MOVES_TAB = "_حركات";
+
+function statusRule_() {
+  return SpreadsheetApp.newDataValidation()
+    .requireValueInList([STATUS.wait, STATUS.shipped, STATUS.returned, STATUS.cancelled], true)
+    .setAllowInvalid(false).build();
+}
+const statusEffect_ = v => String(v || "").indexOf("تم الشحن") >= 0 ? -1 : 0;
+
+const START_PRODUCTS = [
+  ["UstaOBD", "اسطه OBD, usta"], ["OBDTech BT80-AR", "BT80"], ["LAUNCH CRB3001", "CRB3001"],
+  ["Vgate vLinker MC+", "MC+"], ["Vgate vLinker MS", "vlinker ms"], ["Vgate vLinker FS USB", "vlinker fs, ELM327 USB الاصلي, ELM327 USB اصلي"],
+  ["Vgate vLinker BM+", "BM+"], ["Kingbolen Ediag Elite", "ediag"], ["MUCAR BT200 MAX AI", "BT200"],
+  ["XTOOL A30M V2", "A30M"], ["XTOOL Anyscan A30X", "A30X"], ["TOPDON RLink J2534", "rlink"],
+  ["SM2 PRO J2534", "SM2"], ["KTAG V7.020", "ktag"], ["KESS V2 V5.017", "kess"], ["IProg+ V87", "iprog"],
+  ["Tactrix OpenPort 2.0", "openport"], ["AUTOOL AS503", "AS503, oil tester"], ["AUTOOL AS505 Super M3", "AS505, ATF"],
+  ["AUTOOL AS507", "AS507"], ["AUTOOL AS502", "AS502"], ["QDB-5A", "QDB"], ["YC600", ""], ["PD60+", "PD60"],
+  ["XH300", ""], ["IG80-2", "IG80"], ["CNBJ-620", "CNBJ"], ["TopDiag P100", "P100"], ["TopDiag P60", "P60"],
+  ["ANENG RT01", "RT01"], ["FNIRSI 1013D", "1013D"], ["FNIRSI 2C53T", "2C53T"], ["FNIRSI 2C23T", "2C23T"],
+  ["FNIRSI DSO510", "DSO510"], ["FNIRSI DSO152", "DSO152"], ["FNIRSI CTG-20", "CTG-20, CTG20"],
+  ["ANENG 681", "A681"], ["ANENG 682", "A682"], ["ANENG 683", "A683"], ["ANENG P130", "P130"],
+  ["ANENG GN807", "GN807"], ["TASI TA500C", "TA500C"], ["TASI TA636A", "TA636A"], ["ANENG SL106", "SL106"],
+  ["CGSULIT TPMS90", "TPMS90"], ["CGSULIT TS01", "TS01"],
+  ["SGW Bypass Cable", "SGW"], ["OBD Extension 1m", "extension"], ["OBD Adapter US 2018+", ""],
+  ["ELM327 Modified USB Switch", "ELM327 Modified, ELM327 تجاري"], ["MINI VCI J2534", "MINI VCI"],
+  ["INPA K+DCAN USB", "INPA, K+DCAN"], ["VCDS HEX V2", "VCDS, HEX V2"], ["GODIAG GT106", "GT106"],
+  ["Lonauto", ""], ["Kingbolen WiFi", ""], ["KONNWEI MaxOBD", "KONNWEI"], ["XTOOL AD20 Pro", "AD20"],
+  ["ThinkDiag 2", "thinkdiag"], ["ANESOK W600", "W600"], ["C43-M Borescope", "C43-M, C43"],
+  ["G40-M Borescope", "G40-M, G40"], ["QBH KS05", "KS05"], ["Wire Break Detector", "كاشف قطع"],
+];
+
+/** Run once from the editor: creates the stock tabs (every product = 10) and the edit trigger. */
+function setupInventory() {
+  const book = shippingBook_();
+  let inv = book.getSheetByName(STOCK_TAB);
+  if (!inv) {
+    inv = book.insertSheet(STOCK_TAB, 0);
+    inv.setRightToLeft(true);
+    inv.getRange(1, 1, 1, 7).setValues([["الموديل", "الكمية الحالية", "حد التنبيه", "الكمية الافتتاحية", "مستلم", "حركات الطلبات", "أسماء أخرى (للمطابقة)"]])
+      .setFontWeight("bold").setBackground("#1565c0").setFontColor("#fff");
+    inv.setFrozenRows(1);
+    const rows = START_PRODUCTS.map(p => [p[0], "", 3, 10, "", "", p[1]]);
+    inv.getRange(2, 1, rows.length, 7).setValues(rows);
+    [220, 110, 90, 110, 80, 110, 260].forEach((w, i) => inv.setColumnWidth(i + 1, w));
+  }
+  let recv = book.getSheetByName(RECV_TAB);
+  if (!recv) {
+    recv = book.insertSheet(RECV_TAB, 1);
+    recv.setRightToLeft(true);
+    recv.getRange(1, 1, 1, 4).setValues([["التاريخ", "الموديل", "الكمية المستلمة", "ملاحظة"]])
+      .setFontWeight("bold").setBackground("#2e7d32").setFontColor("#fff");
+    recv.setFrozenRows(1);
+    [110, 220, 120, 260].forEach((w, i) => recv.setColumnWidth(i + 1, w));
+    recv.getRange("A2:A500").setNumberFormat("yyyy-mm-dd");
+  }
+  let mv = book.getSheetByName(MOVES_TAB);
+  if (!mv) {
+    mv = book.insertSheet(MOVES_TAB);
+    mv.appendRow(["الوقت", "الموديل", "الكمية", "الحالة", "الطلب", "المستخدم"]);
+  }
+  if (!mv.isSheetHidden()) mv.hideSheet();
+  refreshStockFormulas_(book);
+  // Model dropdown in the receive tab.
+  recv.getRange("B2:B500").setDataValidation(SpreadsheetApp.newDataValidation()
+    .requireValueInRange(inv.getRange("A2:A"), true).setAllowInvalid(false).build());
+  // Installable edit trigger on the shipping sheet (once).
+  const has = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === "onShipEdit");
+  if (!has) ScriptApp.newTrigger("onShipEdit").forSpreadsheet(book).onEdit().create();
+  // Existing daily tabs: checkbox -> status list.
+  book.getSheets().forEach(sh => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sh.getName()) || sh.getLastRow() < 2) return;
+    sh.getRange(1, 11).setValue("الحالة");
+    const n = sh.getLastRow() - 1, vals = sh.getRange(2, 1, n, 11).getValues();
+    vals.forEach((r, i) => {
+      if (r[0] === "" || r[0] == null) return;
+      const c = sh.getRange(i + 2, 11);
+      c.clearDataValidations();
+      c.setValue(r[10] === true ? STATUS.shipped : STATUS.wait).setDataValidation(statusRule_());
+    });
+  });
+  Logger.log("Inventory ready: " + book.getUrl());
+}
+
+function refreshStockFormulas_(book) {
+  const inv = book.getSheetByName(STOCK_TAB);
+  const n = Math.max(inv.getLastRow() - 1, 1);
+  const f = [];
+  for (let r = 2; r < n + 2; r++) {
+    f.push([
+      `=IF(A${r}="","",D${r}+E${r}+F${r})`, null, null,
+      `=IF(A${r}="","",SUMIF('${RECV_TAB}'!B:B,A${r},'${RECV_TAB}'!C:C))`,
+      `=IF(A${r}="","",SUMIF('${MOVES_TAB}'!B:B,A${r},'${MOVES_TAB}'!C:C))`]);
+  }
+  f.forEach((row, i) => {
+    const r = i + 2;
+    inv.getRange(r, 2).setFormula(row[0]);
+    inv.getRange(r, 5).setFormula(row[3]);
+    inv.getRange(r, 6).setFormula(row[4]);
+  });
+  inv.getRange("B2:B").setFontWeight("bold").setHorizontalAlignment("center");
+  inv.clearConditionalFormatRules();
+  inv.setConditionalFormatRules([SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=AND($A2<>"",$B2<=$C2)').setBackground("#fdecea").setFontColor("#b71c1c")
+    .setRanges([inv.getRange("A2:G")]).build()]);
+}
+
+function stockIndex_(book) {
+  const inv = book.getSheetByName(STOCK_TAB);
+  if (!inv || inv.getLastRow() < 2) return [];
+  return inv.getRange(2, 1, inv.getLastRow() - 1, 7).getValues().filter(r => r[0]).map(r => ({
+    name: String(r[0]),
+    keys: [String(r[0])].concat(String(r[6] || "").split(",")).map(k => k.trim().toLowerCase()).filter(k => k.length >= 2)
+  }));
+}
+
+/** "SGW Bypass Cable × 5" -> {name, qty}. Longest matching name/alias wins; unknown models are added (opening 0). */
+function matchModel_(book, text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+  const q = (raw.match(/[×x\*]\s*(\d+)\s*$/i) || [])[1];
+  const qty = q ? Number(q) : 1;
+  const clean = raw.replace(/[×x\*]\s*\d+\s*$/i, "").trim().toLowerCase();
+  let best = null, len = 0;
+  stockIndex_(book).forEach(p => p.keys.forEach(k => {
+    if ((clean === k || clean.indexOf(k) >= 0) && k.length > len) { best = p.name; len = k.length; }
+  }));
+  if (!best) {
+    const inv = book.getSheetByName(STOCK_TAB);
+    best = raw.replace(/[×x\*]\s*\d+\s*$/i, "").trim();
+    inv.appendRow([best, "", 3, 0, "", "", "أضيف تلقائياً من طلب"]);
+    refreshStockFormulas_(book);
+  }
+  return { name: best, qty: qty };
+}
+
+function onShipEdit(e) {
+  try {
+    const sh = e.range.getSheet(), name = sh.getName();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(name)) return;
+    if (e.range.getColumn() > 11 || e.range.getLastColumn() < 11 || e.range.getLastRow() < 2) return;
+    const book = sh.getParent();
+    const mv = book.getSheetByName(MOVES_TAB);
+    if (!mv) return;
+    const last = sh.getLastRow();
+    const all = sh.getRange(2, 1, last - 1, 11).getValues();
+    const user = (e.user && e.user.getEmail && e.user.getEmail()) || "";
+    for (let r = Math.max(2, e.range.getRow()); r <= Math.min(last, e.range.getLastRow()); r++) {
+      const row = all[r - 2];
+      if (row[0] === "" || row[0] == null) continue;           // only the first row of an order holds the status
+      const ref = name + "#" + row[0];
+      const effect = statusEffect_(row[10]);
+      const models = [row[2]];
+      for (let k = r - 1; k < all.length && (all[k][0] === "" || all[k][0] == null) && all[k][2]; k++) models.push(all[k][2]);
+      const logged = mv.getLastRow() > 1 ? mv.getRange(2, 1, mv.getLastRow() - 1, 5).getValues().filter(m => m[4] === ref) : [];
+      models.forEach(t => {
+        const m = matchModel_(book, t);
+        if (!m) return;
+        const done = logged.filter(x => x[1] === m.name).reduce((s, x) => s + (Number(x[2]) || 0), 0);
+        const delta = effect * m.qty - done;
+        if (delta) mv.appendRow([new Date(), m.name, delta, String(row[10] || ""), ref, user]);
+      });
+    }
+  } catch (err) { console.error(err); }
+}
+
+function lowStock_() {
+  const book = shippingBook_();
+  const inv = book.getSheetByName(STOCK_TAB);
+  if (!inv || inv.getLastRow() < 2) return [];
+  return inv.getRange(2, 1, inv.getLastRow() - 1, 3).getValues()
+    .filter(r => r[0] && r[1] !== "" && Number(r[1]) <= Number(r[2] || 0))
+    .map(r => ({ model: r[0], qty: r[1] }));
 }
