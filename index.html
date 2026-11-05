@@ -632,7 +632,7 @@ function card(p){
     <div class="body">
       <div class="mdl">${p.brand.toUpperCase()} · ${p.model}</div>
       <h3>${pName(p)}</h3>
-      <ul>${pF(p).map(x=>`<li>${x}</li>`).join("")}</ul>${DETAILS[p.id]||VIDEOS[p.id]?`<button class="more" type="button" data-gal="${p.id}">${L("more")} ›</button>`:""}
+      <ul>${pF(p).map(x=>`<li>${x}</li>`).join("")}</ul>${DETAILS[p.id]||VIDEOS[p.id]?`<button class="more" type="button" data-gal="${p.id}">${L("details")} ›</button>`:""}
       <div class="foot"><span class="price">${fmt(p.price)}<small>${L("dinar")}</small></span>
         <div class="acts"><a class="share" href="https://wa.me/?text=${encodeURIComponent(msg+"\n"+url)}" target="_blank" rel="noopener" data-share="${p.id}" data-url="${url}" data-msg="${msg.replace(/"/g,"&quot;")}" aria-label="${L("share")}" title="${L("share")}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></a>
         ${p.out?`<button class="add" type="button" disabled>${L("out")}</button>`:`<button class="add${inCart?" in":""}" type="button" data-add="${p.id}">${inCart?L("in_cart",{n:inCart}):L("add")}</button>`}</div></div>
