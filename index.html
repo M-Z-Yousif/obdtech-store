@@ -833,7 +833,7 @@ function galOpen(id){
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
   const vids=(VIDEOS[id]||[]).map(v=>`<video class="gm" controls playsinline preload="metadata" poster="videos/${v}.jpg" src="videos/${v}.mp4"></video>`).join("");
   const url=SHARE_BASE+"#v-"+id;
-  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${vids}${src?`<img class="gm" src="${src}" alt="">`:""}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
+  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${src?`<img class="gm" src="${src}" alt="">`:""}${vids}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
   document.getElementById("gal").classList.add("on");document.body.style.overflow="hidden";
   try{if(window.fbq)fbq("trackCustom","ViewGallery",{content_ids:[id]})}catch(_){}
 }
