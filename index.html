@@ -770,6 +770,23 @@ const HAS_PHOTO = new Set(["usta","bt80","crb3001","vmc","vms","vfs","vbm","edia
 
 /* ---- order alerts: paste your Google Apps Script web app URL here (see google-apps-script/README.md) ---- */
 const ORDER_HOOK = "https://script.google.com/macros/s/AKfycbxmupIWSj9D2rT_57nxTb_tEhZkCrz40mVrlQR_cyOMebEox4XuDTlI1gMK-2QVq-DC/exec";
+/* Live stock from the store sheet (tab المخزون). Quantity 0 or less = out of stock.
+   If the sheet can't be reached, the hard-coded out:1 flags stay as they are. */
+(function(){
+  try{
+    fetch(ORDER_HOOK+"?stock=1",{cache:"no-store"}).then(r=>r.json()).then(st=>{
+      if(!st||typeof st!=="object")return;
+      let changed=false;
+      P.forEach(p=>{
+        if(!(p.id in st))return;
+        const out=Number(st[p.id])<=0?1:0;
+        if(!!p.out!==!!out){p.out=out;changed=true}
+        if(out&&cart[p.id]){delete cart[p.id];changed=true}
+      });
+      if(changed){renderCart();try{refreshSend()}catch(e){}}
+    }).catch(()=>{});
+  }catch(e){}
+})();
 let ORDER_ID = newOrderId(), ORDER_SENT = false;
 function newOrderId(){return "OB-"+Date.now().toString(36).slice(-5).toUpperCase()}
 function postOrder(){

@@ -282,6 +282,8 @@ function notifyNightly_(sh, day, url, isTest) {
 /** Owner taps the green button in the review email -> the team gets that day's email (once). */
 function doGet(e) {
   const p = (e && e.parameter) || {};
+  if (p.stock) return ContentService.createTextOutput(JSON.stringify(storeStock_()))
+    .setMimeType(ContentService.MimeType.JSON);
   const page = (msg, ok) => HtmlService.createHtmlOutput(
     "<div dir='rtl' style='font-family:Tahoma,Arial;font-size:22px;padding:40px;text-align:center;color:" +
     (ok ? "#1b5e20" : "#b71c1c") + "'>" + msg + "</div>").setTitle("OBDTech الشحن")
@@ -615,6 +617,45 @@ function lowStock_() {
     .map(r => ({ model: r[0], qty: r[1] }));
 }
 
+
+/* ===== Website stock: GET <exec>?stock=1 -> {"usta":12,"p100":0,...} =====
+ * The store reads this on load: quantity 0 or less shows "نفذت الكمية" and the add button is disabled.
+ * Keys are the website product ids; values come from "الكمية الحالية" in the المخزون tab. */
+const STOCK_SITE_IDS = {
+  "UstaOBD": "usta", "OBDTech BT80-AR": "bt80", "LAUNCH CRB3001": "crb3001", "Vgate vLinker MC+": "vmc",
+  "Vgate vLinker MS": "vms", "Vgate vLinker FS USB": "vfs", "Vgate vLinker BM+": "vbm", "Kingbolen Ediag Elite": "ediag",
+  "MUCAR BT200 MAX AI": "mucar", "XTOOL A30M V2": "a30m", "XTOOL Anyscan A30X": "a30x", "TOPDON RLink J2534": "rlink",
+  "SM2 PRO J2534": "sm2", "KTAG V7.020": "ktag", "KESS V2 V5.017": "kess", "IProg+ V87": "iprog",
+  "Tactrix OpenPort 2.0": "openport", "AUTOOL AS503": "as503", "AUTOOL AS505 Super M3": "as505", "AUTOOL AS507": "as507",
+  "AUTOOL AS502": "as502", "QDB-5A": "qdb5a", "YC600": "yc600", "PD60+": "pd60", "XH300": "xh300", "IG80-2": "ig80",
+  "CNBJ-620": "cnbj", "TopDiag P100": "p100", "TopDiag P60": "p60", "ANENG RT01": "rt01", "FNIRSI 1013D": "f1013d",
+  "FNIRSI 2C53T": "f2c53t", "FNIRSI DSO510": "dso510", "FNIRSI DSO152": "dso152", "FNIRSI CTG-20": "ctg20",
+  "ANENG 681": "a681", "ANENG 682": "a682", "ANENG 683": "a683", "ANENG P130": "p130", "ANENG GN807": "gn807",
+  "TASI TA500C": "ta500c", "TASI TA636A": "ta636a", "ANENG SL106": "sl106", "CGSULIT TPMS90": "tpms90_tool", "CGSULIT TS01": "ts01"
+};
+
+function storeStock_() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get("store_stock");
+  if (hit) return JSON.parse(hit);
+  const out = {};
+  try {
+    const inv = shippingBook_().getSheetByName(STOCK_TAB);
+    if (inv && inv.getLastRow() > 1) {
+      inv.getRange(2, 1, inv.getLastRow() - 1, 2).getValues().forEach(r => {
+        const id = STOCK_SITE_IDS[String(r[0]).trim()];
+        if (id && r[1] !== "" && r[1] != null && !isNaN(Number(r[1]))) out[id] = Number(r[1]);
+      });
+    }
+    // The store's TPMS90 is a kit: the tool + 4 TS01 sensors.
+    if ("tpms90_tool" in out) {
+      out.tpms90 = ("ts01" in out) ? Math.min(out.tpms90_tool, Math.floor(out.ts01 / 4)) : out.tpms90_tool;
+      delete out.tpms90_tool;
+    }
+  } catch (err) { console.error(err); }
+  cache.put("store_stock", JSON.stringify(out), 120);
+  return out;
+}
 
 /** Removes test tabs ("نموذج…", anything with "تجربة") and their stock movements. Real date tabs stay. */
 function cleanupTests_() {
