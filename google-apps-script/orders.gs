@@ -136,6 +136,11 @@ function writeShipping_(d) {
             confirmedAt: Utilities.formatDate(r[0], "Asia/Seoul", "yyyy-MM-dd HH:mm"),
             name: String(r[2] || ""), address: [r[4], r[5]].filter(String).join(" - "),
             phone: String(r[3] || "").replace(/^'/, ""), model: String(r[6] || ""), image: "",
+            items: String(r[6] || "").split("\n").filter(String).map(line => {
+              const nm = line.split(" × ")[0].trim();
+              const pid = STORE_PHOTOS[nm];
+              return { model: line, image: pid ? STORE_IMG_BASE + pid + ".jpg" : "" };
+            }),
             price: Number(r[9]) || "",
             note: "طلب من الموقع " + id + " — تأكد عبر الواتساب قبل الشحن" + (r[12] ? " • " + r[12] : ""),
             link: "https://wa.me/" + String(r[3] || "").replace(/^'/, "").replace(/^0/, "964")
@@ -347,6 +352,10 @@ function emailTeam_(sh, day, url, to, prefix, approveUrl) {
  * ("OBDTech — أرشيف الشحن YYYY-MM") in the same Google Drive; its link is
  * added to the "اقرأني" tab.
  * ------------------------------------------------------------------ */
+/** Website product name (brand + model) -> store photo id. */
+const STORE_PHOTOS = {"OBDTech UstaOBD": "usta", "OBDTech BT80-AR": "bt80", "LAUNCH CRB3001": "crb3001", "Vgate VLinker MC+": "vmc", "Vgate VLinker MS": "vms", "Vgate VLinker FS USB": "vfs", "Vgate VLinker BM+": "vbm", "EDIAG ELITE": "ediag", "MUCAR BT200 MAX AI": "mucar", "XTOOL A30M V2": "a30m", "XTOOL Anyscan A30X": "a30x", "TOPDON RLink J2534": "rlink", "SM2 PRO J2534": "sm2", "KTAG V7.020": "ktag", "KESS V2 V5.017": "kess", "IProg+ V87": "iprog", "Tactrix OpenPort 2.0": "openport", "AUTOOL AS503": "as503", "AUTOOL AS505 Super M3": "as505", "AUTOOL AS507": "as507", "AUTOOL AS502": "as502", "QDB QDB-5A": "qdb5a", "YC YC600": "yc600", "PD60+ PD60+": "pd60", "XH XH300": "xh300", "IG80 IG80-2": "ig80", "CNBJ CNBJ-620": "cnbj", "TopDiag P100": "p100", "TopDiag P60": "p60", "ANENG RT01": "rt01", "FNIRSI 1013D": "f1013d", "FNIRSI DSO510": "dso510", "FNIRSI DSO152": "dso152", "FNIRSI CTG-20": "ctg20", "ANENG 681": "a681", "ANENG 682": "a682", "ANENG 683": "a683", "ANENG P130": "p130", "ANENG GN807": "gn807", "TASI TA500C": "ta500c", "TASI TA636A": "ta636a", "ANENG SL106": "sl106", "CGSULIT TPMS90 + 4×TS01": "tpms90", "CGSULIT TS01": "ts01", "FNIRSI 2C53T": "f2c53t", "🎁 هدية TPMS90": "tpms90"};
+const STORE_IMG_BASE = "https://m-z-yousif.github.io/obdtech-store/images/";
+
 const KEEP_DAYS = 30;
 
 function trimSheet_(sh, keepCols) {
