@@ -345,10 +345,10 @@ footer .wrap{align-items:center}
 #gal.on{display:flex}
 #gal .gx{position:fixed;top:10px;inset-inline-end:12px;width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:#111;font-size:22px;cursor:pointer}
 #gal h4{flex:none;color:#fff;margin:0 0 12px;font-size:16px;text-align:center}
-#gal .gi{flex:none;width:min(560px,100%);margin:0 0 14px;border-radius:14px;background:#fff;display:block}
-#gal img.gi{object-fit:contain;max-height:70vh}
-#gal video.gi{background:#000;max-height:80vh}
-#gal .gs{display:inline-flex;gap:6px;align-items:center;background:#25D366;color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;text-decoration:none;margin-top:4px}
+#gal .gm{flex:none;width:min(560px,100%);height:auto;margin:0 0 14px;border-radius:14px;background:#fff;display:block}
+#gal img.gm{object-fit:contain;max-height:70vh}
+#gal video.gm{background:#000;max-height:80vh}
+#gal .gsh{display:inline-flex;gap:6px;align-items:center;background:#25D366;color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;text-decoration:none;margin-top:4px}
 .badge.out{background:#6b7280;color:#fff}
 .card .add[disabled]{background:#d1d5db;color:#4b5563;cursor:not-allowed}
 .badge.bulk{top:auto;bottom:14px;background:#FFC83D;color:#1A1306}
@@ -831,9 +831,9 @@ document.addEventListener("click",e=>{
 function galOpen(id){
   const p=byId[id];if(!p)return;
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
-  const vids=(VIDEOS[id]||[]).map(v=>`<video class="gi" controls playsinline preload="metadata" poster="videos/${v}.jpg" src="videos/${v}.mp4"></video>`).join("");
+  const vids=(VIDEOS[id]||[]).map(v=>`<video class="gm" controls playsinline preload="metadata" poster="videos/${v}.jpg" src="videos/${v}.mp4"></video>`).join("");
   const url=SHARE_BASE+"#v-"+id;
-  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${vids}${src?`<img class="gi" src="${src}" alt="">`:""}<a class="gs" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
+  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${vids}${src?`<img class="gm" src="${src}" alt="">`:""}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
   document.getElementById("gal").classList.add("on");document.body.style.overflow="hidden";
   try{if(window.fbq)fbq("trackCustom","ViewGallery",{content_ids:[id]})}catch(_){}
 }
