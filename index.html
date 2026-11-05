@@ -748,16 +748,9 @@ document.getElementById("tiles").addEventListener("click",e=>{
 const GIFT_SVG="<svg class=\"gi\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"4\" rx=\"1\"/><path d=\"M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5\"/></svg>";
 /* ---- product photos: add the id here when you put images/<id>.jpg in the repo, e.g. new Set(["usta","a681"]) ---- */
 const EXT_PHOTO = {
-  dso510:"https://www.fnirsi.com/cdn/shop/files/fnirsi-dso-510-10mhz-48mss-mini-handheld-digital-oscilloscope-signal-generatordigital-oscilloscopefnirsifnirsi-5855665.jpg?v=1751709903&width=800",
-  dso152:"https://www.fnirsi.com/cdn/shop/files/fnirsi-dso-152-200khz-25mss-mini-pocket-handheld-digital-dso-oscilloscopedigital-oscilloscopefnirsifnirsi-5831946.jpg?v=1752962749&width=800",
   f2c23t:"https://www.fnirsi.com/cdn/shop/files/fnirsi-2c23t-handheld-dual-channel-3-in-1-10mhz-50mss-oscilloscope-multimeter-dds-function-generatordigital-oscilloscopefnirsifnirsi-6770896.jpg?v=1751710012&width=800",
-  as502:"https://autoolstore.com/wp-content/uploads/as-card-images/94329-11845acd926751d6-800.webp",
-  as503:"https://autoolstore.com/wp-content/uploads/as-card-images/77246-1a85d51072504fe8-800.webp",
-  as505:"https://autoolstore.com/wp-content/uploads/as-card-images/96664-1de98a5335c4e1f5-800.webp",
-  as507:"https://autoolstore.com/wp-content/uploads/as-card-images/94178-3d046e4944617c3d-800.webp",
-  a683:"https://thinkrobotics.com/cdn/shop/files/aneng-683-high-end-touch-smart-multimeter-6000-counts-multimetro-test-rechargeable-multitester-acdc-voltage-tester-current-tool-2805783.webp?v=1768632976&width=800"
 };
-const HAS_PHOTO = new Set(["usta","bt80","crb3001","vmc","vms","vfs","vbm","ediag","mucar","a30m","a30x","rlink","sm2","ktag","kess","iprog","openport","qdb5a","yc600","pd60","xh300","ig80","cnbj","p100","p60","rt01","f1013d","f2c53t","ctg20","a681","a682","p130","gn807","ta500c","ta636a","sl106","tpms90","ts01"]);
+const HAS_PHOTO = new Set(["usta","bt80","crb3001","vmc","vms","vfs","vbm","ediag","mucar","a30m","a30x","rlink","sm2","ktag","kess","iprog","openport","qdb5a","yc600","pd60","xh300","ig80","cnbj","p100","p60","rt01","f1013d","f2c53t","ctg20","a681","a682","p130","gn807","ta500c","ta636a","sl106","tpms90","ts01","as503","as505","as507","as502","dso510","dso152","a683"]);
 
 /* ---- order alerts: paste your Google Apps Script web app URL here (see google-apps-script/README.md) ---- */
 const ORDER_HOOK = "https://script.google.com/macros/s/AKfycbxmupIWSj9D2rT_57nxTb_tEhZkCrz40mVrlQR_cyOMebEox4XuDTlI1gMK-2QVq-DC/exec";
