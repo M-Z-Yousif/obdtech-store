@@ -857,7 +857,7 @@ document.getElementById("bulkAdd").addEventListener("click",()=>{cart.ts01=(cart
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   setInterval(()=>{ms[k].classList.remove("on");k=(k+1)%ms.length;ms[k].classList.add("on")},5000)})();
 applyLang();
-openFromHash();
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",openFromHash);else openFromHash();
 
 })();
 </script>
