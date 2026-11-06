@@ -123,6 +123,10 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.25}
 .plate{position:relative;height:128px;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;background:
   radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--amber) 8%,var(--panel)),var(--bg) 70%);border-bottom:1px solid var(--line)}
 .plate img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;background:#fff}
+.plate img.pi{opacity:0;transition:opacity .7s ease}.plate img.pi.on{opacity:1}
+.pdots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:2}
+.pdots i{width:6px;height:6px;border-radius:50%;background:#cbd5e1;transition:background .3s}.pdots i.on{background:var(--brand)}
+@media (prefers-reduced-motion:reduce){.plate img.pi{transition:none}}
 .card.has-img .plate{height:210px}
 .card.has-img .glyph,.card.has-img .brand,.card.has-img .model{visibility:hidden}
 .card .mdl{display:none;font:700 12px var(--mono);letter-spacing:.06em;color:var(--muted);direction:ltr;text-align:right}
@@ -623,7 +627,8 @@ function renderChips(){
 function card(p){
   const inCart=cart[p.id];
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
-  const img=!src?"":`<img src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`;
+  const imgs=imgList(p);
+  const img=!src?"":`<img class="pi on" src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`+imgs.slice(1).map(u=>`<img class="pi" data-src="${u}" alt="" aria-hidden="true" onerror="this.remove()">`).join("")+(imgs.length>1?`<span class="pdots" aria-hidden="true">${imgs.map((_,i)=>`<i${i?"":' class="on"'}></i>`).join("")}</span>`:"");
   const url=SHARE_BASE+"?src=share#p-"+p.id;
   const msg=L("share_msg",{name:p.brand+" "+p.model,price:fmt(p.price)});
   return `<article class="card" id="p-${p.id}">
@@ -766,6 +771,9 @@ const DETAILS = {"usta": ["تطبيق اسطه سكان (أندرويد) مصم�
 const VIDEOS = {usta:["usta-1"],bt80:["bt80-1","bt80-2"],ctg20:["ctg20-1","ctg20-2"],ta636a:["ta636a-1"],a30x:["a30x-1","a30x-2"]};
 const EXT_PHOTO = {
 };
+/* Extra photos per product: images/<id>-2.jpg, <id>-3.jpg … (from the page posts). Cards rotate through them. */
+const EXTRA_IMGS = {"usta":2,"bt80":2,"crb3001":2,"vms":2,"vbm":2,"ediag":2,"mucar":2,"a30m":2,"a30x":2,"rlink":2,"as503":2,"qdb5a":2,"yc600":2,"pd60":2,"xh300":2,"ig80":2,"cnbj":2,"rt01":2,"f1013d":2,"f2c53t":2,"ctg20":2,"a681":2,"a682":2,"p130":2,"gn807":2,"ta500c":2,"ta636a":2,"sl106":2,"tpms90":2,"ts01":2};
+function imgList(p){const m=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));if(!m)return [];const a=[m];for(let i=2;i<=(EXTRA_IMGS[p.id]||0)+1;i++)a.push(`images/${p.id}-${i}.jpg`);return a}
 const HAS_PHOTO = new Set(["usta","bt80","crb3001","vmc","vms","vfs","vbm","ediag","mucar","a30m","a30x","rlink","sm2","ktag","kess","iprog","openport","qdb5a","yc600","pd60","xh300","ig80","cnbj","p100","p60","rt01","f1013d","f2c53t","ctg20","a681","a682","p130","gn807","ta500c","ta636a","sl106","tpms90","ts01","as503","as505","as507","as502","dso510","dso152","a683"]);
 
 /* ---- order alerts: paste your Google Apps Script web app URL here (see google-apps-script/README.md) ---- */
@@ -855,7 +863,7 @@ function galOpen(id){
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
   const vids=(VIDEOS[id]||[]).map(v=>`<video class="gm" controls playsinline preload="metadata" poster="videos/${v}.jpg" src="videos/${v}.mp4"></video>`).join("");
   const url=SHARE_BASE+"#v-"+id;
-  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${src?`<img class="gm" src="${src}" alt="">`:""}${DETAILS[id]?`<div class="gm gd" dir="rtl"><b>${L("details")}</b><ul>${DETAILS[id].map(x=>`<li>${x}</li>`).join("")}</ul><div class="gp">${fmt(p.price)} ${L("dinar")}</div></div>`:""}${vids}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
+  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${(src?imgList(p):[]).map(u=>`<img class="gm" src="${u}" alt="" onerror="this.remove()">`).join("")}${DETAILS[id]?`<div class="gm gd" dir="rtl"><b>${L("details")}</b><ul>${DETAILS[id].map(x=>`<li>${x}</li>`).join("")}</ul><div class="gp">${fmt(p.price)} ${L("dinar")}</div></div>`:""}${vids}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
   document.getElementById("gal").classList.add("on");document.body.style.overflow="hidden";
   try{if(window.fbq)fbq("trackCustom","ViewGallery",{content_ids:[id]})}catch(_){}
 }
@@ -865,6 +873,24 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#gal .gx")||e.target.id==="gal")galClose();
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape")galClose()});
+/* Rotate product photos on the cards (only cards on screen; pauses on hover). */
+(function(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  let tick=0;
+  setInterval(()=>{
+    tick++;
+    document.querySelectorAll(".card .plate").forEach((pl,idx)=>{
+      const ims=pl.querySelectorAll("img.pi");if(ims.length<2)return;
+      if((tick+idx)%2)return;                       // stagger neighbouring cards
+      if(pl.matches(":hover"))return;
+      const r=pl.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
+      let cur=[...ims].findIndex(x=>x.classList.contains("on"));
+      const nx=(cur+1)%ims.length,n=ims[nx];
+      const go=()=>{ims.forEach((x,i)=>x.classList.toggle("on",i===nx));pl.querySelectorAll(".pdots i").forEach((d,i)=>d.classList.toggle("on",i===nx))};
+      if(n.dataset.src&&!n.getAttribute("src")){n.onload=go;n.src=n.dataset.src}else go();
+    });
+  },2200);
+})();
 function openFromHash(){
   const v=/^#v-([\w-]+)$/.exec(location.hash);if(v&&byId[v[1]]){galOpen(v[1]);return}
   const m=/^#p-([\w-]+)$/.exec(location.hash);if(!m||!byId[m[1]])return;
