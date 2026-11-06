@@ -772,7 +772,7 @@ const VIDEOS = {usta:["usta-1"],bt80:["bt80-1","bt80-2"],ctg20:["ctg20-1","ctg20
 const EXT_PHOTO = {
 };
 /* Extra photos per product: images/<id>-2.jpg, <id>-3.jpg … (from the page posts). Cards rotate through them. */
-const EXTRA_IMGS = {"usta":2,"bt80":2,"crb3001":2,"vms":2,"vbm":2,"ediag":2,"mucar":2,"a30m":2,"a30x":2,"rlink":2,"as503":2,"qdb5a":2,"yc600":2,"pd60":2,"xh300":2,"ig80":2,"cnbj":2,"rt01":2,"f1013d":2,"f2c53t":2,"ctg20":2,"a681":2,"a682":2,"p130":2,"gn807":2,"ta500c":2,"ta636a":2,"sl106":2,"tpms90":2,"ts01":2,"vmc":1,"p100":2,"p60":2,"vfs":2,"kess":1,"ktag":1,"iprog":1};
+const EXTRA_IMGS = {"usta":2,"bt80":2,"crb3001":2,"vms":2,"vbm":2,"ediag":2,"mucar":2,"a30m":2,"a30x":2,"rlink":2,"as503":2,"qdb5a":2,"yc600":2,"pd60":2,"xh300":2,"ig80":2,"cnbj":2,"rt01":2,"f1013d":2,"f2c53t":2,"ctg20":2,"a681":2,"a682":2,"p130":2,"gn807":2,"ta500c":2,"ta636a":2,"sl106":2,"tpms90":2,"ts01":2,"vmc":1,"p100":2,"p60":2,"vfs":2,"kess":1,"ktag":1,"iprog":1,"dso510":2,"dso152":2};
 function imgList(p){const m=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));if(!m)return [];const a=[m];for(let i=2;i<=(EXTRA_IMGS[p.id]||0)+1;i++)a.push(`images/${p.id}-${i}.jpg`);return a}
 const HAS_PHOTO = new Set(["usta","bt80","crb3001","vmc","vms","vfs","vbm","ediag","mucar","a30m","a30x","rlink","sm2","ktag","kess","iprog","openport","qdb5a","yc600","pd60","xh300","ig80","cnbj","p100","p60","rt01","f1013d","f2c53t","ctg20","a681","a682","p130","gn807","ta500c","ta636a","sl106","tpms90","ts01","as503","as505","as507","as502","dso510","dso152","a683"]);
 
