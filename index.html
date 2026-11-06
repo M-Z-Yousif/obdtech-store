@@ -875,7 +875,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape")galClose()});
 /* Rotate product photos on the cards (only cards on screen; pauses on hover). */
 (function(){
-  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const slow=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;  // still rotate, just slower and without the fade
   let tick=0;
   setInterval(()=>{
     tick++;
@@ -889,7 +889,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")galClose()});
       const go=()=>{ims.forEach((x,i)=>x.classList.toggle("on",i===nx));pl.querySelectorAll(".pdots i").forEach((d,i)=>d.classList.toggle("on",i===nx))};
       if(n.dataset.src&&!n.getAttribute("src")){n.onload=go;n.src=n.dataset.src}else go();
     });
-  },2200);
+  },slow?4000:2200);
 })();
 function openFromHash(){
   const v=/^#v-([\w-]+)$/.exec(location.hash);if(v&&byId[v[1]]){galOpen(v[1]);return}
