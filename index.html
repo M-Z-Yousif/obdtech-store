@@ -753,14 +753,14 @@ function renderCart(){
    Use links like  https://yourdomain/?src=fb   ?src=ig  ?src=qr  ?src=wa  ?src=tiktok  ?src=google
    Ads add fbclid/gclid automatically; otherwise the referring site is used. */
 const SOURCE=(function(){
-  const NAMES={fb:"فيسبوك",ig:"انستغرام",qr:"QR من الكرتونة",wa:"واتساب",tiktok:"تيك توك",google:"كوكل",yt:"يوتيوب",direct:"مباشر"};
+  const NAMES={fb:"فيسبوك",ig:"انستغرام",qr:"QR من الكرتونة",wa:"واتساب",tiktok:"تيك توك",google:"بحث كوكل",gads:"إعلان كوكل",yt:"يوتيوب",direct:"مباشر"};
   let key="";
   try{key=sessionStorage.getItem("obd_src")||""}catch(e){}
   if(!key){
     const u=new URLSearchParams(location.search);
     const r=(document.referrer||"").toLowerCase();
     key=(u.get("src")||u.get("utm_source")||"").toLowerCase()
-      ||(u.get("fbclid")?"fb":"")||(u.get("gclid")?"google":"")
+      ||(u.get("fbclid")?"fb":"")||(u.get("gclid")?"gads":"")
       ||(/instagram/.test(r)?"ig":/facebook|fb\.com/.test(r)?"fb":/google\./.test(r)?"google":/tiktok/.test(r)?"tiktok":/youtube/.test(r)?"yt":/whatsapp|wa\.me/.test(r)?"wa":"")
       ||"direct";
     try{sessionStorage.setItem("obd_src",key)}catch(e){}
@@ -773,10 +773,10 @@ function waLink(text){return "https://wa.me/"+WA+"?text="+encodeURIComponent(tex
 function orderText(){
   const f=document.getElementById("orderForm");
   const t=totals();
-  const lines=Object.entries(cart).map(([id,qty])=>{const p=byId[id],u=unitPrice(p,qty);return `• ${p.brand} ${p.model} × ${qty} = ${fmt(u*qty)} د.ع`+(gifts(p,qty)?`\n   🎁 هدية: جهاز برمجة TPMS90 × ${gifts(p,qty)}`:"")});
-  return [`طلب جديد من موقع OBDTech (${ORDER_ID})`,"",...lines,"",`المنتجات: ${fmt(t.sub)} د.ع`,`التوصيل: ${t.del?fmt(t.del)+" د.ع":"مجاني"}`,`المجموع: ${fmt(t.grand)} د.ع`,"",
+  const lines=Object.entries(cart).map(([id,qty])=>{const p=byId[id],u=unitPrice(p,qty);return `• ${p.name&&p.name!==p.model?p.name+" ("+p.brand+" "+p.model+")":p.brand+" "+p.model} × ${qty} = ${fmt(u*qty)} د.ع`+(gifts(p,qty)?`\n   🎁 هدية: جهاز برمجة TPMS90 × ${gifts(p,qty)}`:"")});
+  return [`طلب جديد من موقع OBDTech — رقم الطلب: ${ORDER_ID}`,"",...lines,"",`المنتجات: ${fmt(t.sub)} د.ع`,`التوصيل: ${t.del?fmt(t.del)+" د.ع":"مجاني"}`,`المجموع: ${fmt(t.grand)} د.ع`,"",
     `الاسم: ${f.name.value.trim()}`,`الهاتف: ${normPhone(f.phone.value)}`,`المحافظة: ${f.gov.value}`,`العنوان: ${f.area.value.trim()}`,
-    f.note.value.trim()?`ملاحظات: ${f.note.value.trim()}`:"","",`المصدر: ${SOURCE.label}`,LANG!=="ar"?`لغة الزبون: ${LANG==="en"?"English":"کوردی"}`:""].filter((l,i,a)=>!(l===""&&a[i-1]==="")).join("\n").trim();
+    f.note.value.trim()?`ملاحظات: ${f.note.value.trim()}`:"","",`مصدر الزبون: ${SOURCE.label}`,LANG!=="ar"?`لغة الزبون: ${LANG==="en"?"English":"کوردی"}`:""].filter((l,i,a)=>!(l===""&&a[i-1]==="")).join("\n").trim();
 }
 
 function normPhone(v){return String(v||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[\s\-()]/g,"")}
