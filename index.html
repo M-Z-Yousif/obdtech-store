@@ -735,7 +735,8 @@ const GLYPH={
   all:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="2"/><rect x="18" y="5" width="9" height="9" rx="2"/><rect x="5" y="18" width="9" height="9" rx="2"/><rect x="18" y="18" width="9" height="9" rx="2"/></svg>'
 };
 
-const SHARE_BASE=(location.protocol.startsWith("http")?location.origin+location.pathname:"https://obdtech.net/");
+/* Share links point to the product's own page (p/<id>/, built by tools/build-share-pages.js) so WhatsApp/Facebook show that product's photo, name and price, then open the product on the store. */
+const shareUrl=id=>"https://obdtech.net/p/"+id+"/";
 const fmt=n=>n.toLocaleString("en-US");
 const byId=Object.fromEntries(P.map(p=>[p.id,p]));
 let cat="all", q="";
@@ -769,7 +770,7 @@ function card(p){
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
   const imgs=imgList(p);
   const img=!src?"":`<img class="pi on" src="${src}" alt="${p.brand} ${p.model}" loading="lazy" onload="this.closest('.card').classList.add('has-img')" onerror="this.remove()">`+imgs.slice(1).map(u=>`<img class="pi" data-src="${u}" alt="" aria-hidden="true" onerror="this.remove()">`).join("")+(imgs.length>1?`<span class="pdots" aria-hidden="true">${imgs.map((_,i)=>`<i${i?"":' class="on"'}></i>`).join("")}</span>`:"");
-  const url=SHARE_BASE+"?src=share#p-"+p.id;
+  const url=shareUrl(p.id);
   const msg=L("share_msg",{name:p.brand+" "+p.model,price:fmt(p.price)});
   return `<article class="card" id="p-${p.id}">
     <div class="plate" data-gal="${p.id}" role="button" tabindex="0" aria-label="${L("gallery")}">${img}${VIDEOS[p.id]?`<span class="vbadge"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${L("video")}</span>`:""}<span class="glyph" aria-hidden="true">${GLYPH[p.cat]}</span>${p.out?`<span class="badge out">${L("out")}</span>`:p.best?`<span class="badge">${L("best")}</span>`:""}${p.bulk?`<span class="badge bulk">${GIFT_SVG}${L("bulk_badge")}</span>`:""}
@@ -1007,8 +1008,8 @@ function galOpen(id){
   const p=byId[id];if(!p)return;
   const src=p.img||(HAS_PHOTO.has(p.id)?`images/${p.id}.jpg`:(EXT_PHOTO[p.id]||""));
   const vids=(VIDEOS[id]||[]).map(v=>`<video class="gm" controls playsinline preload="metadata" poster="videos/${v}.jpg" src="videos/${v}.mp4"></video>`).join("");
-  const url=SHARE_BASE+"#v-"+id;
-  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${(src?imgList(p):[]).map(u=>`<img class="gm" src="${u}" alt="" onerror="this.remove()">`).join("")}${DETAILS[id]?`<div class="gm gd" dir="rtl"><b>${L("details")}</b><ul>${DETAILS[id].map(x=>`<li>${x}</li>`).join("")}</ul><div class="gp">${fmt(p.price)} ${L("dinar")}</div></div>`:""}${vids}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(p.brand+" "+p.model+"\n"+url)}" target="_blank" rel="noopener">${L("share")}</a>`;
+  const url=shareUrl(id),gmsg=L("share_msg",{name:p.brand+" "+p.model,price:fmt(p.price)});
+  document.getElementById("galin").innerHTML=`<h4>${p.brand} ${p.model} — ${pName(p)}</h4>${(src?imgList(p):[]).map(u=>`<img class="gm" src="${u}" alt="" onerror="this.remove()">`).join("")}${DETAILS[id]?`<div class="gm gd" dir="rtl"><b>${L("details")}</b><ul>${DETAILS[id].map(x=>`<li>${x}</li>`).join("")}</ul><div class="gp">${fmt(p.price)} ${L("dinar")}</div></div>`:""}${vids}<a class="gsh" href="https://wa.me/?text=${encodeURIComponent(gmsg+"\n"+url)}" target="_blank" rel="noopener" data-share="${id}" data-url="${url}" data-msg="${gmsg.replace(/"/g,"&quot;")}">${L("share")}</a>`;
   document.getElementById("gal").classList.add("on");document.body.style.overflow="hidden";
   try{if(window.fbq)fbq("trackCustom","ViewGallery",{content_ids:[id]})}catch(_){}
 }
