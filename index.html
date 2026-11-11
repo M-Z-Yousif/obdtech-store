@@ -1018,23 +1018,41 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#gal .gx")||e.target.id==="gal")galClose();
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape")galClose()});
-/* Rotate product photos on the cards (only cards on screen; pauses on hover). */
+/* Card photos change only when the visitor acts: hover (desktop), swipe on the photo, or after they scroll (the card in the middle of the screen shows its next photo once). No constant auto-rotation. */
 (function(){
-  const slow=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;  // still rotate, just slower and without the fade
-  let tick=0;
-  setInterval(()=>{
-    tick++;
-    document.querySelectorAll(".card .plate").forEach((pl,idx)=>{
-      const ims=pl.querySelectorAll("img.pi");if(ims.length<2)return;
-      if((tick+idx)%2)return;                       // stagger neighbouring cards
-      if(pl.matches(":hover"))return;
-      const r=pl.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
-      let cur=[...ims].findIndex(x=>x.classList.contains("on"));
-      const nx=(cur+1)%ims.length,n=ims[nx];
-      const go=()=>{ims.forEach((x,i)=>x.classList.toggle("on",i===nx));pl.querySelectorAll(".pdots i").forEach((d,i)=>d.classList.toggle("on",i===nx))};
-      if(n.dataset.src&&!n.getAttribute("src")){n.onload=go;n.src=n.dataset.src}else go();
-    });
-  },slow?4000:2200);
+  function show(pl,step){
+    const ims=pl.querySelectorAll("img.pi");if(ims.length<2)return;
+    const cur=Math.max(0,[...ims].findIndex(x=>x.classList.contains("on")));
+    const nx=(cur+step+ims.length)%ims.length,n=ims[nx];
+    const go=()=>{ims.forEach((x,i)=>x.classList.toggle("on",i===nx));pl.querySelectorAll(".pdots i").forEach((d,i)=>d.classList.toggle("on",i===nx))};
+    if(n.dataset.src&&!n.getAttribute("src")){n.onload=go;n.src=n.dataset.src}else go();
+  }
+  // desktop: cycle while the mouse is over the photo
+  let hov=null,ht=0;
+  document.addEventListener("mouseover",e=>{
+    if(!matchMedia("(hover:hover)").matches)return;
+    const pl=e.target.closest(".card .plate");if(pl===hov)return;
+    clearInterval(ht);hov=pl;if(!pl)return;
+    ht=setTimeout(function step(){if(hov!==pl)return;show(pl,1);ht=setTimeout(step,1400)},350);
+  });
+  // touch: swipe sideways on the photo
+  let sx=0,sy=0,spl=null,swiped=false;
+  document.addEventListener("touchstart",e=>{const pl=e.target.closest(".card .plate");spl=pl;swiped=false;if(pl){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
+  document.addEventListener("touchend",e=>{
+    if(!spl)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){swiped=true;const rtl=document.documentElement.dir==="rtl";show(spl,(dx<0)!==rtl?1:-1)}
+    spl=null;
+  },{passive:true});
+  document.addEventListener("click",e=>{if(swiped&&e.target.closest(".card .plate")){swiped=false;e.stopPropagation();e.preventDefault()}},true);
+  // after the visitor scrolls: the card nearest the middle of the screen shows its next photo once
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  let st=0,last=null;
+  addEventListener("scroll",()=>{clearTimeout(st);st=setTimeout(()=>{
+    if(matchMedia("(hover:hover)").matches)return;   // phones/tablets only; desktop uses hover
+    let best=null,bd=1e9;const mid=innerHeight/2;
+    document.querySelectorAll(".card .plate").forEach(pl=>{const r=pl.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;const d=Math.abs((r.top+r.bottom)/2-mid);if(d<bd){bd=d;best=pl}});
+    if(best&&best!==last&&bd<innerHeight*.3){last=best;show(best,1)}
+  },250)},{passive:true});
 })();
 function openFromHash(){
   const v=/^#v-([\w-]+)$/.exec(location.hash);if(v&&byId[v[1]]){galOpen(v[1]);return}
