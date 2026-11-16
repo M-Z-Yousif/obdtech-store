@@ -680,7 +680,7 @@ const P = [
   {id:"w600",cat:"cam",brand:"ANESOK",model:"W600 WiFi",name:"كاميرا فحص واي فاي بعدستين على الموبايل",price:55000,f:["عدسة مزدوجة", "مقاومة للماء IP67", "تعمل على الموبايل"]},
   {id:"w400",cat:"cam",brand:"ANESOK",model:"W400",name:"كاميرا فحص اقتصادية على الموبايل",price:30000,f:["مقاومة للماء IP67", "تعمل على الموبايل", "اقتصادية"]},
   {id:"inskam370",cat:"cam",brand:"INSKAM",model:"370",name:"مجهر رقمي محمول بشاشة 2 إنش",price:30000,f:["شاشة IPS 2 إنش", "لفحص الدوائر الإلكترونية", "محمول بالجيب"]},
-  {id:"vpower",cat:"shop",brand:"VISUAL POWER",model:"Jump Starter",name:"جهاز طوارئ: تشغيل سيارة + كمبريسر + كشاف",price:50000,f:["Jump Starter", "كمبريسر هواء", "كشاف LED"]},
+  {id:"vpower",out:1,hold:1,cat:"shop",brand:"VISUAL POWER",model:"Jump Starter",name:"جهاز طوارئ: تشغيل سيارة + كمبريسر + كشاف",price:50000,f:["Jump Starter", "كمبريسر هواء", "كشاف LED"]},
   {id:"hudf11",cat:"hud",brand:"HUD",model:"F11",name:"شاشة HUD ملونة OBD + GPS",price:60000,f:["تيربو، حرارة، A/F، زاوية ميل", "GPS: سرعة واتجاه وارتفاع", "يدعم العربية"]},
   {id:"hudp21",cat:"hud",brand:"HUD",model:"P21",name:"عداد رقمي رياضي OBD2 + GPS",price:60000,f:["تصميم Racing", "سرعة OBD أو GPS", "يدعم العربية"]},
   {id:"hudp6",cat:"hud",brand:"HUD",model:"P6",name:"شاشة HUD OBD + GPS",price:50000,f:["سرعة، RPM، حرارة، فولت", "إنذارات + اختبار تسارع", "يدعم العربية"]},
@@ -932,7 +932,7 @@ const ORDER_HOOK = "https://script.google.com/macros/s/AKfycbxmupIWSj9D2rT_57nxT
       if(!st||typeof st!=="object")return;
       let changed=false;
       P.forEach(p=>{
-        if(!(p.id in st))return;
+        if(p.hold||!(p.id in st))return;
         const out=Number(st[p.id])<=0?1:0;
         if(!!p.out!==!!out){p.out=out;changed=true}
         if(out&&cart[p.id]){delete cart[p.id];changed=true}
