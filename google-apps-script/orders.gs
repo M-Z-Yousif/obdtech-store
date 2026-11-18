@@ -310,7 +310,8 @@ function siartnaOrders_(seen) {
     if (!num || cancelled.has(num) || seen.has("siartna|" + num)) return;
     seen.add("siartna|" + num);
     const html = m.getBody();
-    const link = ((/href="(https:\/\/siartna\.com\/[^"]*type=print_invoice[^"]*)"/.exec(html) || [])[1] || "").replace(/&amp;/g, "&");
+    const link = ((/href=["']?([^"'\s>]*print_invoice[^"'\s>]*)/i.exec(html) || /(https?:\/\/[^"'\s<>]*print_invoice[^"'\s<>]*)/i.exec(html) || [])[1] || "").replace(/&amp;/g, "&");
+    if (!link) Logger.log("siartna: no invoice link; hrefs: " + (html.match(/href=["'][^"']{0,160}/gi) || []).slice(0, 12).join(" | "));
     const plain = m.getPlainBody();
     let inv = null, pdfUrl = "", warn = "";
     if (link) {
@@ -324,7 +325,7 @@ function siartnaOrders_(seen) {
             const file = siartnaFolder_().createFile(pdf);
             file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
             pdfUrl = file.getUrl();
-          } catch (e) { warn = "تعذر حفظ PDF — الرابط يفتح الفاتورة للطباعة"; }
+          } catch (e) { Logger.log("siartna pdf: " + e); }
         } else warn = "تعذر فتح الفاتورة تلقائياً — افتح الرابط";
       } catch (e) { warn = "تعذر فتح الفاتورة تلقائياً — افتح الرابط"; }
     } else warn = "لا يوجد رابط فاتورة في الايميل";
