@@ -149,6 +149,10 @@ function writeShipping_(d) {
       }
     } catch (err) {}
 
+    // Sayartna (سيارتنا) partner orders from Gmail, with their printable invoice (not for sample tabs).
+    let siartnaErr = "";
+    if (!d.sample) try { siartnaOrders_(seen).forEach(o => fresh.push(o)); } catch (err) { siartnaErr = String(err); }
+
     const name = String(d.day || Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyy-MM-dd"));
     let sh = book.getSheetByName(name);
     if (!sh) {
@@ -202,7 +206,7 @@ function writeShipping_(d) {
         [1, 4, 5, 6, 7, 8, 9, 10, 11].forEach(c => sh.getRange(first, c, rows, 1).merge());
         sh.getRange(first, 2, rows, 2).setBorder(null, null, null, null, null, true, "#cccccc", SpreadsheetApp.BorderStyle.DOTTED);
       }
-      if (o.link) sh.getRange(first, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : "فتح المحادثة") + '")');
+      if (o.link) sh.getRange(first, 10).setFormula('=HYPERLINK("' + String(o.link).replace(/"/g, "") + '","' + (o.thread === "web" ? "واتساب الزبون" : o.thread === "siartna" ? "🖨️ طباعة الفاتورة" : "فتح المحادثة") + '")');
       sh.getRange(first, 11).setDataValidation(statusRule_());
       if (/ناقص|يرجى|صوتية|غير صحيح/.test(String(o.note || ""))) sh.getRange(first, 8).setBackground("#fff3cd").setFontWeight("bold");
       sh.getRange(first + rows - 1, 1, 1, SHIP_HEADERS.length)
@@ -225,12 +229,129 @@ function writeShipping_(d) {
     if (!d.sample && d.notify !== false) {
       try { emailed = notifyNightly_(sh, name, book.getUrl() + "#gid=" + sh.getSheetId()); } catch (err) {}
     }
-    return { emailed: emailed, archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web").length),
+    return { emailed: emailed, archived: archived, ok: true, added: fresh.length, skipped: Math.max(0, posted - fresh.filter(o => o.thread !== "web" && o.thread !== "siartna").length),
              website: fresh.filter(o => o.thread === "web").length,
+             siartna: fresh.filter(o => o.thread === "siartna").length, siartnaError: siartnaErr,
              total: total, tab: name, url: book.getUrl() + "#gid=" + sh.getSheetId() };
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------------- Sayartna (سيارتنا) partner orders ----------------
+ * Sayartna's store emails obdtech360@gmail.com "[سيارتنا] New customer order (N)"
+ * with a "فاتورة طباعة" link. Each night: read new ones (last 3 days, not sent before),
+ * open the invoice page, take name / address / phone / items / total, save a PDF copy
+ * of the invoice in Drive (folder "OBDTech — فواتير سيارتنا", viewable by link) and add
+ * the order to the sheet with a print link. Cancelled orders (later email with
+ * cancelled / ملغي for the same number) are skipped.
+ * ------------------------------------------------------------------ */
+const SIARTNA_FROM = "online@siartna.com";
+
+function siartnaFolder_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty("SIARTNA_FOLDER");
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const f = DriveApp.createFolder("OBDTech — فواتير سيارتنا");
+  props.setProperty("SIARTNA_FOLDER", f.getId());
+  return f;
+}
+
+function htmlText_(s) {
+  return String(s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#0?39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/[ \t]+/g, " ").trim();
+}
+
+function classVal_(html, cls) {
+  const m = new RegExp('class="[^"]*\\b' + cls + '\\b[^"]*"[^>]*>([\\s\\S]*?)</(?:div|span|td)>').exec(html);
+  return m ? htmlText_(m[1]) : "";
+}
+
+function iqPhone_(p) {
+  let s = String(p || "").replace(/[^\d]/g, "");
+  if (s.indexOf("00964") === 0) s = s.slice(5);
+  else if (s.indexOf("964") === 0) s = s.slice(3);
+  if (s && s[0] !== "0") s = "0" + s;
+  return s;
+}
+
+/** Parses one Sayartna invoice page. */
+function parseSiartnaInvoice_(html) {
+  const bill = classVal_(html, "wfte_billing_address_val").split("\n").map(x => x.trim()).filter(String);
+  const tel = iqPhone_(classVal_(html, "wfte_tel_val") || (bill.length ? bill[bill.length - 1] : ""));
+  if (bill.length && /^\+?\d[\d\s]{7,}$/.test(bill[bill.length - 1])) bill.pop();
+  const name = bill.shift() || "";
+  const items = [];
+  const body = (/<tbody[^>]*wfte_product_table_body[^>]*>([\s\S]*?)<\/tbody>/.exec(html) || [])[1] || "";
+  (body.match(/<tr[\s\S]*?<\/tr>/g) || []).forEach(tr => {
+    const cell = c => { const m = new RegExp('<td[^>]*class="[^"]*' + c + '[^"]*"[^>]*>([\\s\\S]*?)</td>').exec(tr); return m ? m[1] : ""; };
+    const prod = htmlText_(cell("product_td")).replace(/\n+/g, " ").trim();
+    if (!prod) return;
+    const qty = Number(htmlText_(cell("quantity_td")).replace(/[^\d]/g, "")) || 1;
+    const img = (/<img[^>]+src="([^"]+)"/.exec(cell("image_td")) || [])[1] || "";
+    items.push({ model: prod + (qty > 1 ? " × " + qty : ""), image: img });
+  });
+  const totRow = (/class="[^"]*wfte_product_table_payment_total\b[\s\S]*?<\/tr>/.exec(html) || [])[0] || "";
+  const nums = htmlText_(totRow).match(/[\d,]{4,}/g) || [];
+  const total = nums.length ? Number(nums[nums.length - 1].replace(/,/g, "")) : 0;
+  return { name: name, address: bill.join(" - "), phone: tel, items: items, total: total,
+           number: classVal_(html, "wfte_order_number_val") };
+}
+
+function siartnaOrders_(seen) {
+  const out = [];
+  const cancelled = new Set();
+  GmailApp.search('from:' + SIARTNA_FROM + ' newer_than:7d (cancelled OR canceled OR ملغي OR ملغى OR "تم إلغاء")', 0, 50)
+    .forEach(th => th.getMessages().forEach(m => { const n = /\((\d+)\)/.exec(m.getSubject()); if (n) cancelled.add(n[1]); }));
+  const threads = GmailApp.search('from:' + SIARTNA_FROM + ' subject:"New customer order" newer_than:3d', 0, 50);
+  threads.forEach(th => th.getMessages().forEach(m => {
+    const num = (/\((\d+)\)/.exec(m.getSubject()) || [])[1];
+    if (!num || cancelled.has(num) || seen.has("siartna|" + num)) return;
+    seen.add("siartna|" + num);
+    const html = m.getBody();
+    const link = ((/href="(https:\/\/siartna\.com\/[^"]*type=print_invoice[^"]*)"/.exec(html) || [])[1] || "").replace(/&amp;/g, "&");
+    const plain = m.getPlainBody();
+    let inv = null, pdfUrl = "", warn = "";
+    if (link) {
+      try {
+        const res = UrlFetchApp.fetch(link, { muteHttpExceptions: true, followRedirects: true });
+        if (res.getResponseCode() === 200 && /wfte_billing_address_val/.test(res.getContentText())) {
+          const page = res.getContentText();
+          inv = parseSiartnaInvoice_(page);
+          try {
+            const pdf = Utilities.newBlob(page, MimeType.HTML, "Invoice_" + num + ".html").getAs(MimeType.PDF).setName("Siartna_Invoice_" + num + ".pdf");
+            const file = siartnaFolder_().createFile(pdf);
+            file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            pdfUrl = file.getUrl();
+          } catch (e) { warn = "تعذر حفظ PDF — الرابط يفتح الفاتورة للطباعة"; }
+        } else warn = "تعذر فتح الفاتورة تلقائياً — افتح الرابط";
+      } catch (e) { warn = "تعذر فتح الفاتورة تلقائياً — افتح الرابط"; }
+    } else warn = "لا يوجد رابط فاتورة في الايميل";
+    // Fallback from the email text.
+    if (!inv) {
+      const who = (/order from ([^.\n]+)/.exec(plain) || [])[1] || "";
+      const tot = (/الإجمالي:\s*([\d,]+)/.exec(plain) || [])[1] || "";
+      inv = { name: who.trim(), address: "", phone: "", items: [], total: Number(tot.replace(/,/g, "")) || 0 };
+    }
+    const notes = ["[سيارتنا] طلب " + num + " — اطبع الفاتورة وضعها مع الطلب"];
+    if (!inv.address || !inv.phone) notes.push("العنوان/الهاتف بالفاتورة — يرجى التأكد");
+    if (warn) notes.push(warn);
+    out.push({
+      thread: "siartna", key: "siartna|" + num,
+      confirmedAt: Utilities.formatDate(m.getDate(), "Asia/Seoul", "yyyy-MM-dd HH:mm"),
+      name: inv.name, address: inv.address, phone: inv.phone,
+      items: inv.items.length ? inv.items : [{ model: "طلب سيارتنا " + num + " (انظر الفاتورة)", image: "" }],
+      price: inv.total || "", note: notes.join(" • "), link: pdfUrl || link
+    });
+  }));
+  return out;
+}
+
+/** Run once from the editor to approve Gmail + Drive access, and to test the reader. */
+function testSiartna() {
+  const o = siartnaOrders_(new Set());
+  Logger.log(JSON.stringify(o, null, 1));
 }
 
 /* ---------------- Nightly email to the shipping team ----------------
