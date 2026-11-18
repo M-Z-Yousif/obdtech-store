@@ -300,7 +300,36 @@ function doGet(e) {
   if (!sh) return page("ورقة " + day + " غير موجودة", false);
   emailTeam_(sh, day, book.getUrl() + "#gid=" + sh.getSheetId(), team, "");
   props.setProperty("APPROVED_" + day, new Date().toISOString());
-  return page("✓ تم إرسال طلبات " + day + " للفريق", true);
+  return HtmlService.createHtmlOutput(
+    "<div dir='rtl' style='font-family:Tahoma,Arial;font-size:22px;padding:40px;text-align:center;color:#1b5e20'>✓ تم إرسال طلبات " + day +
+    " للفريق<p style='margin-top:28px'><a target='_top' href='" + shareUrl_(sh, day, book.getUrl() + "#gid=" + sh.getSheetId()).replace(/'/g, "%27") +
+    "' style='background:#25d366;color:#fff;padding:14px 26px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:20px'>📲 شارك عبر واتساب</a></p></div>")
+    .setTitle("OBDTech الشحن").addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+/** WhatsApp share link for a day's shipping list (wa.me opens WhatsApp with the text ready; the
+ *  owner picks the team group/contact). No phone numbers in the text — they stay in the sheet. */
+function shareUrl_(sh, day, url) {
+  const rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues() : [];
+  const orders = [];
+  rows.forEach(r => {
+    if (r[0] !== "" && r[0] != null) orders.push({ n: r[0], models: [r[2]], name: r[3], address: r[5], price: Number(r[6]) || 0, note: r[7] });
+    else if (orders.length && r[2]) orders[orders.length - 1].models.push(r[2]);
+  });
+  const fmt = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const total = orders.reduce((s, o) => s + o.price, 0);
+  const head = "📦 طلبات الشحن " + day + "\nعدد الطلبات: " + orders.length + " • المجموع: " + fmt(total) + " د.ع\n";
+  const tail = "\n📄 شيت اليوم (الصور وأرقام الهواتف):\n" + url +
+    "\n\nبعد شحن كل طلب غيّروا «الحالة» الى ✅ تم الشحن.";
+  let body = "";
+  for (const o of orders) {
+    const gov = String(o.address || "").split(/[،,\-–]/)[0].trim();
+    const line = "\n" + o.n + ") " + o.name + " — " + gov + " — " + o.models.join(" + ") + " — " + fmt(o.price) +
+      (/ناقص|يرجى|غير صحيح|تعديل|استبدال|مخفي/.test(String(o.note)) ? " ⚠️" : "");
+    if ((head + body + line + tail).length > 1500) { body += "\n… والباقي بالشيت"; break; }
+    body += line;
+  }
+  return "https://wa.me/?text=" + encodeURIComponent(head + body + "\n" + tail);
 }
 
 function emailTeam_(sh, day, url, to, prefix, approveUrl) {
@@ -338,11 +367,12 @@ function emailTeam_(sh, day, url, to, prefix, approveUrl) {
     (orders.length ? "<table style='border-collapse:collapse;width:100%;margin-bottom:14px'>" +
       "<tr style='background:#d32f2f;color:#fff'><th style='padding:6px'>#</th><th style='padding:6px'>الزبون والعنوان</th><th style='padding:6px'>الموديل</th><th style='padding:6px'>السعر</th></tr>" +
       list + "</table>" : "<p>لا توجد طلبات جديدة اليوم.</p>") +
-    "<p><a href='" + esc(url) + "' style='background:#d32f2f;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>افتح شيت اليوم (الصور وأرقام الهواتف)</a></p>" +
+    "<p><a href='" + esc(url) + "' style='background:#d32f2f;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>افتح شيت اليوم (الصور وأرقام الهواتف)</a>" +
+      " &nbsp; <a href='" + esc(shareUrl_(sh, day, url)) + "' style='background:#25d366;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block'>📲 شارك عبر واتساب</a></p>" +
     (low.length ? "<p style='background:#fdecea;padding:8px;border-radius:6px'>📉 مخزون قليل: " +
       low.map(x => "<b>" + esc(x.model) + "</b> (" + x.qty + ")").join("، ") + "</p>" : "") +
     "<p style='color:#777;font-size:12px'>بعد شحن كل طلب غيّر «الحالة» الى ✅ تم الشحن — والمخزون ينقص تلقائياً. الراجع: ↩️ راجع.</p></div>";
-  const plain = "طلبات الشحن " + day + ": " + orders.length + " طلب — المجموع " + fmt(total) + " د.ع\n" + url;
+  const plain = "طلبات الشحن " + day + ": " + orders.length + " طلب — المجموع " + fmt(total) + " د.ع\n" + url + "\nشارك عبر واتساب: " + shareUrl_(sh, day, url);
   MailApp.sendEmail({ to: to, subject: subject, body: plain, htmlBody: html, name: "OBDTech الشحن" });
   return to.split(",").length;
 }
