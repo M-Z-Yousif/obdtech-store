@@ -820,10 +820,11 @@ function renderCart(){
 
 
 /* ---- where did this visitor come from? ----
+   Paid Meta ads use ?src=fbad (or ?src=igad) so orders say "إعلان فيسبوك".
    Use links like  https://yourdomain/?src=fb   ?src=ig  ?src=qr  ?src=wa  ?src=tiktok  ?src=google
    Ads add fbclid/gclid automatically; otherwise the referring site is used. */
 const SOURCE=(function(){
-  const NAMES={fb:"فيسبوك",ig:"انستغرام",qr:"QR من الكرتونة",wa:"واتساب",tiktok:"تيك توك",google:"بحث كوكل",gads:"إعلان كوكل",yt:"يوتيوب",direct:"مباشر"};
+  const NAMES={fbad:"إعلان فيسبوك",igad:"إعلان انستغرام",fb:"فيسبوك",ig:"انستغرام",qr:"QR من الكرتونة",wa:"واتساب",tiktok:"تيك توك",google:"بحث كوكل",gads:"إعلان كوكل",yt:"يوتيوب",direct:"مباشر"};
   let key="";
   try{key=sessionStorage.getItem("obd_src")||""}catch(e){}
   if(!key){
